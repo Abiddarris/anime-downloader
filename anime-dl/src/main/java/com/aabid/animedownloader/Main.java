@@ -3,12 +3,136 @@
  */
 package com.aabid.animedownloader;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import okhttp3.CookieJar;
+import okhttp3.JavaNetCookieJar;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import tools.jackson.databind.ObjectMapper;
+
 public class Main {
-    public String getGreeting() {
-        return "Hello World!";
+    public static void main(String[] args) throws IOException, InterruptedException {
+        int animeId = 7791;
+        int episode = 3;
+        String name = "K-On Season 2 Episode " + episode + ".mp4";
+        String link = String.format("https://tryembed.us.cc/embed/anime/%d/%d/sub", animeId, episode);
+
+        CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        CookieJar cookieJar = new JavaNetCookieJar(cookieHandler);
+        OkHttpClient client = new OkHttpClient.Builder()
+            .followRedirects(false)
+            .cookieJar(cookieJar)
+            .build();
+
+        Request request = new Request.Builder()
+            .url(link)
+            .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                System.out.println(response.code());
+                return;
+            }
+        }
+
+        request = new Request.Builder()
+                .url(String.format("https://tryembed.us.cc/api/stream_data?id=%d&episode=%d&audio=sub", animeId, episode))
+                .addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
+                .addHeader("Referer", link)
+                .addHeader("Sec-Fetch-Dest", "empty")
+                .addHeader("Sec-Fetch-Mode", "cors")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                System.out.println(response.code());
+                return;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            @SuppressWarnings("null")
+            EpisodeInformation episodeInformation = mapper.readValue(
+                response.body().string(), EpisodeInformation.class);
+            for (VideoStream stream : episodeInformation.selectedProvider.streams) {
+                if (stream.name.contains("720p")) {
+                    System.out.println(stream.name);
+
+                    String streamLink = getStreamLink(client, stream, link);
+                    Process process = Runtime.getRuntime()
+                        .exec(new String[] {
+                            "yt-dlp",
+                            "--add-headers", "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+                            "--add-headers", "Accept: */*",
+                            "--add-headers", "Accept-Language: en-US,en;q=0.9",
+                          //  "--add-headers", "Accept-Encoding: gzip, deflate, br, zstd",
+                            "--add-headers", "Origin: https://tryembed.us.cc",
+                            "--add-headers", "Referer: https://tryembed.us.cc/",
+                            "--add-headers", "Connection: keep-alive",
+                            "--add-headers", "Sec-Fetch-Dest: empty",
+                            "--add-headers", "Sec-Fetch-Mode: cors",
+                            "--add-headers", "Sec-Fetch-Site: cross-site",
+                            "--add-headers", "TE: trailers",
+                            "--fragment-retries", "infinite",
+                            "-o", name, streamLink,
+                        });
+
+                    ExecutorService service = Executors.newFixedThreadPool(2);
+                    service.execute(() -> transferStream(process.getInputStream(), System.out));
+                    service.execute(() -> transferStream(process.getErrorStream(), System.err));
+
+                    process.waitFor();
+                    System.out.println(process.exitValue());
+
+                    service.shutdown();
+
+                    return;
+                }
+
+            }
+            System.out.println("not found.");
+        }
     }
 
-    public static void main(String[] args) {
-        System.out.println(new Main().getGreeting());
+    private static void transferStream(InputStream from, PrintStream to) {
+        byte[] b = new byte[4096];
+        int len;
+        try {
+            while ((len = from.read(b)) != -1) {
+                to.write(b, 0, len);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String getStreamLink(OkHttpClient client, VideoStream stream, String link) throws IOException {
+        String streamLink = "https://tryembed.us.cc/s/" + stream.token + ".m3u8";
+        System.out.println(streamLink);
+        Request request = new Request.Builder()
+            .url(streamLink)
+            .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
+            .header("Accept", "*/*")
+            .header("Accept-Language", "en-US,en;q=0.9")
+            .header("Referer", link)
+            .header("Sec-Fetch-Dest", "empty")
+            .header("Sec-Fetch-Mode", "cors")
+            .header("Sec-Fetch-Site", "same-origin")
+            .header("TE", "trailers")
+            .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            System.out.println(response.body().string());
+            System.out.println(response.code());
+            return response.header("Location");
+        }
+
     }
 }
