@@ -20,9 +20,9 @@ import tools.jackson.databind.ObjectMapper;
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
-        int animeId = 7791;
-        int episode = 3;
-        String name = "K-On Season 2 Episode " + episode + ".mp4";
+        int animeId = Integer.parseInt(args[0]);
+        int episode = Integer.parseInt(args[1]);
+        String name = args[2];
         String link = String.format("https://tryembed.us.cc/embed/anime/%d/%d/sub", animeId, episode);
 
         CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
