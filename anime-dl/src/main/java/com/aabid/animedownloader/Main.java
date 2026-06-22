@@ -3,74 +3,39 @@
  */
 package com.aabid.animedownloader;
 
-import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
-import com.aabid.animedownloader.source.Episode;
-import com.aabid.animedownloader.source.Quality;
-import com.aabid.animedownloader.source.Server;
 
 import okhttp3.CookieJar;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
+import picocli.CommandLine;
 import tools.jackson.databind.ObjectMapper;
 
 public class Main {
 
     public static final ObjectMapper MAPPER = new ObjectMapper();
-    public static void main(String[] args) throws IOException, InterruptedException {
-        int animeId = Integer.parseInt(args[0]);
-        int episodeId = Integer.parseInt(args[1]);
-        String quality = args[2];
-        String name = args[3];
-        String serverId = args.length >= 5 ? args[4] : null;
 
-        OkHttpClient client = newClient();
+    public static void main(String[] args) {
         ExecutorService service = Executors.newCachedThreadPool();
         M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
+        OkHttpClient client = newClient();
         AnimeSource source = new AnimeSource(client, MAPPER);
 
-        Episode episode = source.queryAnime(animeId, episodeId);
-        Server server = getServer(serverId, episode);
-        if (!server.isReady()) {
-            source.fetchServer(server);
-        }
-
-        for (Quality q : server.getQualities()) {
-            if (!q.getName().contains(quality)) {
-                continue;
-            }
-
-            if (!q.isResolved()) {
-                source.resolveQuality(q, episode.getSourceLink());
-            }
-
-            downloader.download(q.getLink(), name, System.out, System.err);
-        }
+        AnimeDownloader animeDownloader = new AnimeDownloader(source, downloader);
+        CommandLine commandLine = new CommandLine(animeDownloader);
+        int code = commandLine.execute(args);
 
         service.shutdown();
-        System.out.println("Video not found.");
-    }
 
-    private static Server getServer(String serverId, Episode episode) {
-        Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
-        if (serverId == null && server == null) {
-            System.err.println("No server available");
-            System.exit(1);
-        }
-
-        if (serverId != null && server == null) {
-            System.err.printf("No such server with id '%s'\n", serverId);
-            System.exit(1);
-        }
-
-        return server;
+        System.exit(code);
     }
 
     private static OkHttpClient newClient() {
