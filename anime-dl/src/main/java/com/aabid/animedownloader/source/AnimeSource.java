@@ -53,6 +53,29 @@ public class AnimeSource {
         server.setQualities(parseQualities(provider.qualities));
     }
 
+    public void resolveQuality(Quality quality, String referer) throws IOException {
+        TokenBasedQuality tokenBasedQuality = (TokenBasedQuality)quality;
+        String streamLink = "https://tryembed.us.cc/s/" + tokenBasedQuality.getToken() + ".m3u8";
+        Request request = new Request.Builder()
+                .url(streamLink)
+                .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
+                .header("Accept", "*/*")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .header("Referer", referer)
+                .header("Sec-Fetch-Dest", "empty")
+                .header("Sec-Fetch-Mode", "cors")
+                .header("Sec-Fetch-Site", "same-origin")
+                .header("TE", "trailers")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            checkSuccessful(request, response);
+
+            tokenBasedQuality.resolve(response.header("Location"));
+        }
+
+    }
+
     private void refreshCookie(String link) throws IOException {
         Request request = new Request.Builder()
                 .url(link)
@@ -111,15 +134,27 @@ public class AnimeSource {
 
     private List<Quality> parseQualities(List<StreamQuality> qualities2) {
         List<Quality> qualities = qualities2.stream()
-            .map(quality -> new Quality(quality.name, quality.token, quality.fallbackToken))
+            .map(this::createQuality)
             .toList();
         return qualities;
     }
 
+    private Quality createQuality(StreamQuality quality) {
+        if (quality.token == null && quality.fallbackToken == null) {
+            return new DirectQuality(quality.name, quality.directUrl);
+        }
+        return new TokenBasedQuality(quality.name, quality.token, quality.fallbackToken);
+    }
+
     private void checkSuccessful(Request request, Response response) throws IOException {
+        if (response.isRedirect()) {
+            return;
+        }
+
         if (!response.isSuccessful()) {
             throw new IOException(
-                "'" + request.url() + "' returns code " + response.code() + ": " + response.body().string());
+                "'" + request.url() + "' returns code " + response.code() + ": " + response.body().string()
+            );
         }
     }
 

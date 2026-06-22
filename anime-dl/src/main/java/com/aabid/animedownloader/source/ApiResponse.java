@@ -18,8 +18,14 @@ class ApiResponse {
 
     static class StreamQuality {
         public String name;
+
+        // token based stream
         public String token;
         public String fallbackToken;
+
+        // direct stream
+        public String directUrl;
+        public boolean isM3U8;
     }
 
     static class Meta {

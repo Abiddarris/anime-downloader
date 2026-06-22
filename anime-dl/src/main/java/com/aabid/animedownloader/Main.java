@@ -19,8 +19,6 @@ import com.aabid.animedownloader.source.Server;
 import okhttp3.CookieJar;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import tools.jackson.databind.ObjectMapper;
 
 public class Main {
@@ -42,11 +40,15 @@ public class Main {
         }
 
         for (Quality q : server.getQualities()) {
-            if (q.getName().contains(quality)) {
-                download(name, client, episode, q);
-
-                return;
+            if (!q.getName().contains(quality)) {
+                continue;
             }
+
+            if (!q.isResolved()) {
+                source.resolveQuality(q, episode.getSourceLink());
+            }
+
+            download(q, name);
         }
 
         System.out.println("Video not found.");
@@ -67,11 +69,7 @@ public class Main {
         return server;
     }
 
-    private static void download(String name, OkHttpClient client, Episode episode, Quality q)
-            throws IOException, InterruptedException {
-        System.out.println(q.getName());
-
-        String streamLink = getStreamLink(client, q, episode.getSourceLink());
+    private static void download(Quality quality, String output) throws IOException, InterruptedException {
         Process process = Runtime.getRuntime()
                 .exec(new String[] {
                         "yt-dlp",
@@ -88,7 +86,7 @@ public class Main {
                         "--add-headers", "Sec-Fetch-Site: cross-site",
                         "--add-headers", "TE: trailers",
                         "--fragment-retries", "infinite",
-                        "-o", name, streamLink,
+                        "-o", output, quality.getLink()
                 });
 
         ExecutorService service = Executors.newFixedThreadPool(2);
@@ -123,26 +121,4 @@ public class Main {
         }
     }
 
-    private static String getStreamLink(OkHttpClient client, Quality stream, String link) throws IOException {
-        String streamLink = "https://tryembed.us.cc/s/" + stream.getToken() + ".m3u8";
-        System.out.println(streamLink);
-        Request request = new Request.Builder()
-            .url(streamLink)
-            .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
-            .header("Accept", "*/*")
-            .header("Accept-Language", "en-US,en;q=0.9")
-            .header("Referer", link)
-            .header("Sec-Fetch-Dest", "empty")
-            .header("Sec-Fetch-Mode", "cors")
-            .header("Sec-Fetch-Site", "same-origin")
-            .header("TE", "trailers")
-            .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            System.out.println(response.body().string());
-            System.out.println(response.code());
-            return response.header("Location");
-        }
-
-    }
 }
