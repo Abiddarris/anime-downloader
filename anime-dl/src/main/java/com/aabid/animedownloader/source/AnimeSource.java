@@ -1,6 +1,11 @@
 package com.aabid.animedownloader.source;
 
 import java.io.IOException;
+import java.util.List;
+
+import org.jspecify.annotations.NonNull;
+
+import com.aabid.animedownloader.source.ApiResponse.Provider;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -23,10 +28,26 @@ public class AnimeSource {
     public Episode queryAnime(int animeId, int episode) throws IOException {
         String link = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
         refreshCookie(link);
-        return fetchEpisode(animeId, episode, link);
+
+        ApiResponse response = getEpisodeInformation(animeId, episode, link);
+        return parseResponse(link, response);
     }
 
-    private Episode fetchEpisode(int animeId, int episodeNumber, String referer) throws IOException {
+    private Episode parseResponse(String link, ApiResponse response) {
+        List<@NonNull Server> servers = response.providers.stream()
+            .map(this::parseServer)
+            .toList();
+        return new Episode(link, servers);
+    }
+
+    private @NonNull Server parseServer(Provider provider) {
+        List<@NonNull Quality> qualities = provider.qualities.stream()
+            .map(quality -> new Quality(quality.name, quality.token, quality.fallbackToken))
+            .toList();
+        return new Server(provider.id, provider.name, true, qualities);
+    }
+
+    private @NonNull ApiResponse getEpisodeInformation(int animeId, int episodeNumber, String referer) throws IOException {
         Request request = new Request.Builder()
                 .url(String.format(HOST + "/api/stream_data?id=%d&episode=%d&audio=sub", animeId, episodeNumber))
                 .addHeader("User-Agent", USER_AGENT)
@@ -38,9 +59,7 @@ public class AnimeSource {
         try (Response response = client.newCall(request).execute()) {
             checkSuccessful(request, response);
 
-            Episode episode = mapper.readValue(response.body().string(), Episode.class);
-            episode.setSourceLink(referer);
-            return episode;
+            return mapper.readValue(response.body().string(), ApiResponse.class);
         }
     }
 

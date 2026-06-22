@@ -13,7 +13,8 @@ import java.util.concurrent.Executors;
 
 import com.aabid.animedownloader.source.AnimeSource;
 import com.aabid.animedownloader.source.Episode;
-import com.aabid.animedownloader.source.VideoStream;
+import com.aabid.animedownloader.source.Quality;
+import com.aabid.animedownloader.source.Server;
 
 import okhttp3.CookieJar;
 import okhttp3.JavaNetCookieJar;
@@ -35,18 +36,35 @@ public class Main {
         AnimeSource source = new AnimeSource(client, MAPPER);
         Episode episode = source.queryAnime(animeId, episodeId);
 
-        for (VideoStream stream : episode.selectedProvider.streams) {
-            if (stream.name.contains(quality)) {
-                System.out.println(stream.name);
+        for (Server server : episode.getServers()) {
+            if (!server.isReady()) {
+                continue;
+            }
 
-                String streamLink = getStreamLink(client, stream, episode.getSourceLink());
-                Process process = Runtime.getRuntime()
-                    .exec(new String[] {
+            for (Quality q : server.getQualities()) {
+                if (q.getName().contains(quality)) {
+                    download(name, client, episode, q);
+
+                    return;
+                }
+            }
+        }
+        System.out.println("Video not found.");
+    }
+
+    private static void download(String name, OkHttpClient client, Episode episode, Quality q)
+            throws IOException, InterruptedException {
+        System.out.println(q.getName());
+
+        String streamLink = getStreamLink(client, q, episode.getSourceLink());
+        Process process = Runtime.getRuntime()
+                .exec(new String[] {
                         "yt-dlp",
-                        "--add-headers", "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+                        "--add-headers",
+                        "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
                         "--add-headers", "Accept: */*",
                         "--add-headers", "Accept-Language: en-US,en;q=0.9",
-                        //  "--add-headers", "Accept-Encoding: gzip, deflate, br, zstd",
+                        // "--add-headers", "Accept-Encoding: gzip, deflate, br, zstd",
                         "--add-headers", "Origin: https://tryembed.us.cc",
                         "--add-headers", "Referer: https://tryembed.us.cc/",
                         "--add-headers", "Connection: keep-alive",
@@ -56,22 +74,16 @@ public class Main {
                         "--add-headers", "TE: trailers",
                         "--fragment-retries", "infinite",
                         "-o", name, streamLink,
-                    });
+                });
 
-                ExecutorService service = Executors.newFixedThreadPool(2);
-                service.execute(() -> transferStream(process.getInputStream(), System.out));
-                service.execute(() -> transferStream(process.getErrorStream(), System.err));
+        ExecutorService service = Executors.newFixedThreadPool(2);
+        service.execute(() -> transferStream(process.getInputStream(), System.out));
+        service.execute(() -> transferStream(process.getErrorStream(), System.err));
 
-                process.waitFor();
-                System.out.println(process.exitValue());
+        process.waitFor();
+        System.out.println(process.exitValue());
 
-                service.shutdown();
-
-                return;
-            }
-
-        }
-        System.out.println("not found.");
+        service.shutdown();
     }
 
     private static OkHttpClient newClient() {
@@ -96,8 +108,8 @@ public class Main {
         }
     }
 
-    private static String getStreamLink(OkHttpClient client, VideoStream stream, String link) throws IOException {
-        String streamLink = "https://tryembed.us.cc/s/" + stream.token + ".m3u8";
+    private static String getStreamLink(OkHttpClient client, Quality stream, String link) throws IOException {
+        String streamLink = "https://tryembed.us.cc/s/" + stream.getToken() + ".m3u8";
         System.out.println(streamLink);
         Request request = new Request.Builder()
             .url(streamLink)
