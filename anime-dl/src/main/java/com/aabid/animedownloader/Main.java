@@ -4,13 +4,13 @@
 package com.aabid.animedownloader;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.aabid.animedownloader.m3u8.M3U8Downloader;
+import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
@@ -32,7 +32,10 @@ public class Main {
         String serverId = args.length >= 5 ? args[4] : null;
 
         OkHttpClient client = newClient();
+        ExecutorService service = Executors.newCachedThreadPool();
+        M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
         AnimeSource source = new AnimeSource(client, MAPPER);
+
         Episode episode = source.queryAnime(animeId, episodeId);
         Server server = getServer(serverId, episode);
         if (!server.isReady()) {
@@ -48,9 +51,10 @@ public class Main {
                 source.resolveQuality(q, episode.getSourceLink());
             }
 
-            download(q, name);
+            downloader.download(q.getLink(), name, System.out, System.err);
         }
 
+        service.shutdown();
         System.out.println("Video not found.");
     }
 
@@ -69,36 +73,6 @@ public class Main {
         return server;
     }
 
-    private static void download(Quality quality, String output) throws IOException, InterruptedException {
-        Process process = Runtime.getRuntime()
-                .exec(new String[] {
-                        "yt-dlp",
-                        "--add-headers",
-                        "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
-                        "--add-headers", "Accept: */*",
-                        "--add-headers", "Accept-Language: en-US,en;q=0.9",
-                        // "--add-headers", "Accept-Encoding: gzip, deflate, br, zstd",
-                        "--add-headers", "Origin: https://tryembed.us.cc",
-                        "--add-headers", "Referer: https://tryembed.us.cc/",
-                        "--add-headers", "Connection: keep-alive",
-                        "--add-headers", "Sec-Fetch-Dest: empty",
-                        "--add-headers", "Sec-Fetch-Mode: cors",
-                        "--add-headers", "Sec-Fetch-Site: cross-site",
-                        "--add-headers", "TE: trailers",
-                        "--fragment-retries", "infinite",
-                        "-o", output, quality.getLink()
-                });
-
-        ExecutorService service = Executors.newFixedThreadPool(2);
-        service.execute(() -> transferStream(process.getInputStream(), System.out));
-        service.execute(() -> transferStream(process.getErrorStream(), System.err));
-
-        process.waitFor();
-        System.out.println(process.exitValue());
-
-        service.shutdown();
-    }
-
     private static OkHttpClient newClient() {
         CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         CookieJar cookieJar = new JavaNetCookieJar(cookieHandler);
@@ -108,17 +82,4 @@ public class Main {
             .build();
         return client;
     }
-
-    private static void transferStream(InputStream from, PrintStream to) {
-        byte[] b = new byte[4096];
-        int len;
-        try {
-            while ((len = from.read(b)) != -1) {
-                to.write(b, 0, len);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }
