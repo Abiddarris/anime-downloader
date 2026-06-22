@@ -31,25 +31,40 @@ public class Main {
         int episodeId = Integer.parseInt(args[1]);
         String quality = args[2];
         String name = args[3];
+        String serverId = args.length >= 5 ? args[4] : null;
 
         OkHttpClient client = newClient();
         AnimeSource source = new AnimeSource(client, MAPPER);
         Episode episode = source.queryAnime(animeId, episodeId);
+        Server server = getServer(serverId, episode);
+        if (!server.isReady()) {
+            source.fetchServer(server);
+        }
 
-        for (Server server : episode.getServers()) {
-            if (!server.isReady()) {
-                continue;
-            }
+        for (Quality q : server.getQualities()) {
+            if (q.getName().contains(quality)) {
+                download(name, client, episode, q);
 
-            for (Quality q : server.getQualities()) {
-                if (q.getName().contains(quality)) {
-                    download(name, client, episode, q);
-
-                    return;
-                }
+                return;
             }
         }
+
         System.out.println("Video not found.");
+    }
+
+    private static Server getServer(String serverId, Episode episode) {
+        Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
+        if (serverId == null && server == null) {
+            System.err.println("No server available");
+            System.exit(1);
+        }
+
+        if (serverId != null && server == null) {
+            System.err.printf("No such server with id '%s'\n", serverId);
+            System.exit(1);
+        }
+
+        return server;
     }
 
     private static void download(String name, OkHttpClient client, Episode episode, Quality q)

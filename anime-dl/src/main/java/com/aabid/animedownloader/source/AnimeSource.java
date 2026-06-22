@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.util.List;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import com.aabid.animedownloader.source.ApiResponse.Provider;
+import com.aabid.animedownloader.source.ApiResponse.StreamQuality;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -16,6 +19,7 @@ public class AnimeSource {
 
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0";
     private static final String HOST = "https://tryembed.us.cc";
+    private static final String HOST_NAME = "tryembed.us.cc";
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
@@ -29,27 +33,40 @@ public class AnimeSource {
         String link = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
         refreshCookie(link);
 
-        ApiResponse response = getEpisodeInformation(animeId, episode, link);
-        return parseResponse(link, response);
+        ApiResponse response = fetchEpisodeData(animeId, episode, null, link);
+        return parseResponse(response, link);
     }
 
-    private Episode parseResponse(String link, ApiResponse response) {
-        List<@NonNull Server> servers = response.providers.stream()
-            .map(this::parseServer)
-            .toList();
-        return new Episode(link, servers);
+    public void fetchServer(Server server) throws IOException {
+        Episode episode = server.getEpisode();
+        ApiResponse response = fetchEpisodeData(
+            episode.getId(), episode.getEpisode(), server.getId(), episode.getSourceLink()
+        );
+        Provider provider = response.providers.stream()
+            .filter(p -> p.id.equals(server.getId()))
+            .findFirst()
+            .get();
+        if (!provider.status.equals("ready")) {
+            throw new IOException("server is not ready");
+        }
+
+        server.setQualities(parseQualities(provider.qualities));
     }
 
-    private @NonNull Server parseServer(Provider provider) {
-        List<@NonNull Quality> qualities = provider.qualities.stream()
-            .map(quality -> new Quality(quality.name, quality.token, quality.fallbackToken))
-            .toList();
-        return new Server(provider.id, provider.name, provider.status.equals("ready"), qualities);
-    }
-
-    private @NonNull ApiResponse getEpisodeInformation(int animeId, int episodeNumber, String referer) throws IOException {
+    private void refreshCookie(String link) throws IOException {
         Request request = new Request.Builder()
-                .url(String.format(HOST + "/api/stream_data?id=%d&episode=%d&audio=sub", animeId, episodeNumber))
+                .url(link)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            checkSuccessful(request, response);
+        }
+    }
+
+    private @Nullable ApiResponse fetchEpisodeData(
+            int animeId, int episodeNumber, @Nullable String server, @NonNull String referer) throws IOException {
+        Request request = new Request.Builder()
+                .url(buildUrl(animeId, episodeNumber, server))
                 .addHeader("User-Agent", USER_AGENT)
                 .addHeader("Referer", referer)
                 .addHeader("Sec-Fetch-Dest", "empty")
@@ -63,14 +80,40 @@ public class AnimeSource {
         }
     }
 
-    private void refreshCookie(String link) throws IOException {
-        Request request = new Request.Builder()
-            .url(link)
-            .build();
+    @NonNull
+    private HttpUrl buildUrl(int animeId, int episodeNumber, @Nullable String server) {
+        HttpUrl.Builder builder = new HttpUrl.Builder()
+            .scheme("https")
+            .host(HOST_NAME)
+            .addPathSegment("api")
+            .addPathSegment("stream_data")
+            .addQueryParameter("id", String.valueOf(animeId))
+            .addQueryParameter("episode", String.valueOf(episodeNumber))
+            .addQueryParameter("audio", "sub");
 
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
+        if (server != null) {
+            builder.addQueryParameter("server", server);
         }
+        return builder.build();
+    }
+
+    private Episode parseResponse(ApiResponse response, @NonNull String link) {
+        List<Server> servers = response.providers.stream()
+            .map(this::parseServer)
+            .toList();
+        return new Episode(link, response.meta.anilist_id, response.meta.episode, servers);
+    }
+
+    private @NonNull Server parseServer(Provider provider) {
+        List<Quality> qualities = parseQualities(provider.qualities);
+        return new Server(provider.id, provider.name, provider.status.equals("ready"), qualities);
+    }
+
+    private List<Quality> parseQualities(List<StreamQuality> qualities2) {
+        List<Quality> qualities = qualities2.stream()
+            .map(quality -> new Quality(quality.name, quality.token, quality.fallbackToken))
+            .toList();
+        return qualities;
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
