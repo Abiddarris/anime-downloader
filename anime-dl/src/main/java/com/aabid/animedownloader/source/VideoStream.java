@@ -1,4 +1,4 @@
-package com.aabid.animedownloader;
+package com.aabid.animedownloader.source;
 
 public class VideoStream {
     public String name;

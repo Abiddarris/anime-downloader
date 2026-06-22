@@ -11,6 +11,10 @@ import java.net.CookiePolicy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.aabid.animedownloader.source.AnimeSource;
+import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.VideoStream;
+
 import okhttp3.CookieJar;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
