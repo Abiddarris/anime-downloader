@@ -27,6 +27,7 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:5.4.0"
     implementation "tools.jackson.core:jackson-core:3.2.0"
     implementation "tools.jackson.core:jackson-databind:3.2.0"
+    implementation "info.picocli:picocli:4.7.7"
     implementation libs.guava
 }
 
