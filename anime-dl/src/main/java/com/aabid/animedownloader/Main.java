@@ -24,14 +24,15 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         int animeId = Integer.parseInt(args[0]);
         int episodeId = Integer.parseInt(args[1]);
-        String name = args[2];
+        String quality = args[2];
+        String name = args[3];
 
         OkHttpClient client = newClient();
         AnimeSource source = new AnimeSource(client, MAPPER);
         Episode episode = source.queryAnime(animeId, episodeId);
 
         for (VideoStream stream : episode.selectedProvider.streams) {
-            if (stream.name.contains("720p")) {
+            if (stream.name.contains(quality)) {
                 System.out.println(stream.name);
 
                 String streamLink = getStreamLink(client, stream, episode.getSourceLink());
