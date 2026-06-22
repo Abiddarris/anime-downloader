@@ -44,7 +44,7 @@ public class AnimeSource {
         List<@NonNull Quality> qualities = provider.qualities.stream()
             .map(quality -> new Quality(quality.name, quality.token, quality.fallbackToken))
             .toList();
-        return new Server(provider.id, provider.name, true, qualities);
+        return new Server(provider.id, provider.name, provider.status.equals("ready"), qualities);
     }
 
     private @NonNull ApiResponse getEpisodeInformation(int animeId, int episodeNumber, String referer) throws IOException {
