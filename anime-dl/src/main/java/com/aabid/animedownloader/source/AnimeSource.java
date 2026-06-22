@@ -34,7 +34,7 @@ public class AnimeSource {
         refreshCookie(link);
 
         ApiResponse response = fetchEpisodeData(animeId, episode, null, link);
-        return parseResponse(response, link);
+        return ApiResponseParser.parseResponse(response, link);
     }
 
     public void fetchServer(Server server) throws IOException {
@@ -50,7 +50,7 @@ public class AnimeSource {
             throw new IOException("server is not ready");
         }
 
-        server.setQualities(parseQualities(provider.qualities));
+        server.setQualities(ApiResponseParser.createQualities(provider.qualities));
     }
 
     public void resolveQuality(Quality quality, String referer) throws IOException {
@@ -118,32 +118,6 @@ public class AnimeSource {
             builder.addQueryParameter("server", server);
         }
         return builder.build();
-    }
-
-    private Episode parseResponse(ApiResponse response, @NonNull String link) {
-        List<Server> servers = response.providers.stream()
-            .map(this::parseServer)
-            .toList();
-        return new Episode(link, response.meta.anilist_id, response.meta.episode, servers);
-    }
-
-    private @NonNull Server parseServer(Provider provider) {
-        List<Quality> qualities = parseQualities(provider.qualities);
-        return new Server(provider.id, provider.name, provider.status.equals("ready"), qualities);
-    }
-
-    private List<Quality> parseQualities(List<StreamQuality> qualities2) {
-        List<Quality> qualities = qualities2.stream()
-            .map(this::createQuality)
-            .toList();
-        return qualities;
-    }
-
-    private Quality createQuality(StreamQuality quality) {
-        if (quality.token == null && quality.fallbackToken == null) {
-            return new DirectQuality(quality.name, quality.directUrl);
-        }
-        return new TokenBasedQuality(quality.name, quality.token, quality.fallbackToken);
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
