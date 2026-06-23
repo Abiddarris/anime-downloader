@@ -20,6 +20,7 @@ import picocli.CommandLine.Parameters;
     name = "anime-downloader",
     description = "Download anime from tryembed.us.cc",
     mixinStandardHelpOptions = true,
+    subcommands = {InfoSubcommand.class},
     version = "1.0.0"
 )
 public class AnimeDownloader implements Callable<Integer> {
@@ -33,10 +34,10 @@ public class AnimeDownloader implements Callable<Integer> {
     @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
     private String quality;
 
-    @Parameters(index = "0", description = "AniList anime ID")
+   // @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
 
-    @Parameters(index = "1", description = "Episode number")
+    //@Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
     private AnimeSource source;

@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.aabid.animedownloader.cli.AnimeDownloader;
+import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
@@ -29,8 +30,9 @@ public class Main {
         OkHttpClient client = newClient();
         AnimeSource source = new AnimeSource(client, MAPPER);
 
+        SubcommandFactory factory = new SubcommandFactory(source);
         AnimeDownloader animeDownloader = new AnimeDownloader(source, downloader);
-        CommandLine commandLine = new CommandLine(animeDownloader);
+        CommandLine commandLine = new CommandLine(animeDownloader, factory);
         int code = commandLine.execute(args);
 
         service.shutdown();
