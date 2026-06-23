@@ -1,5 +1,6 @@
 package com.aabid.animedownloader.cli;
 
+import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -15,6 +16,8 @@ import com.aabid.animedownloader.source.Server;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Spec;
+import picocli.CommandLine.Model.CommandSpec;
 
 @Command(
     name = "download",
@@ -22,6 +25,9 @@ import picocli.CommandLine.Parameters;
     mixinStandardHelpOptions = true
 )
 public class DownloadSubcommand implements Callable<Integer> {
+
+    @Spec
+    private CommandSpec spec;
 
     @Option(names = {"-s", "--server"}, description = "ID of server to download from")
     private String serverId;
@@ -48,16 +54,29 @@ public class DownloadSubcommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        PrintWriter out = spec.commandLine().getOut();
+        PrintWriter err = spec.commandLine().getErr();
+
         Episode episode = source.queryAnime(animeId, episodeId);
-        Server server = getServer(serverId, episode);
+        Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
+        if (serverId == null && server == null) {
+            err.println("No server available");
+            return 1;
+        }
+
+        if (serverId != null && server == null) {
+            err.printf("No such server with id '%s'\n", serverId);
+            return 1;
+        }
+
         if (!server.isReady()) {
             source.fetchServer(server);
         }
 
         Optional<Quality> qualityOpt = getQuality(server, this.quality);
         if (qualityOpt.isEmpty()) {
-            System.err.println("No stream found.");
-            return -1;
+            err.println("No stream found.");
+            return 1;
         }
 
         Quality quality = qualityOpt.get();
@@ -84,20 +103,4 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         return Optional.empty();
     }
-
-    private static Server getServer(String serverId, Episode episode) {
-        Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
-        if (serverId == null && server == null) {
-            System.err.println("No server available");
-            System.exit(1);
-        }
-
-        if (serverId != null && server == null) {
-            System.err.printf("No such server with id '%s'\n", serverId);
-            System.exit(1);
-        }
-
-        return server;
-    }
-
 }

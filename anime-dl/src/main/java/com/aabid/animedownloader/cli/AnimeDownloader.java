@@ -4,6 +4,8 @@ import java.util.concurrent.Callable;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Spec;
 
 @Command(
     name = "anime-downloader",
@@ -14,9 +16,12 @@ import picocli.CommandLine.Command;
 )
 public class AnimeDownloader implements Callable<Integer> {
 
+    @Spec
+    private CommandSpec spec;
+
     @Override
     public Integer call() throws Exception {
-        CommandLine.usage(this, System.out);
+        spec.commandLine().usage(System.out);
         return 2;
     }
 
