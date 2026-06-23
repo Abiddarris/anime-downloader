@@ -13,7 +13,7 @@ import picocli.CommandLine.Parameters;
 
 @Command(
     name = "info",
-    description = "Fetch available servers and qualities"
+    description = "Fetch and display available servers and qualities for an episode"
 )
 public class InfoSubcommand implements Callable<Integer> {
 
