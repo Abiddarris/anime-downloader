@@ -32,9 +32,27 @@ class ApiResponseParser {
 
     @NonNull
     static Quality createQuality(StreamQuality quality) {
+        String name = getStandarizedName(quality);
         if (quality.token == null && quality.fallbackToken == null) {
-            return new DirectQuality(quality.name, quality.directUrl);
+            return new DirectQuality(name, quality.directUrl);
         }
-        return new TokenBasedQuality(quality.name, quality.token, quality.fallbackToken);
+        return new TokenBasedQuality(name, quality.token, quality.fallbackToken);
+    }
+
+    private static String getStandarizedName(@NonNull StreamQuality quality) {
+        if (quality.name.equals("Default")) {
+            return quality.name;
+        }
+
+        if (quality.name.endsWith("p")) {
+            return quality.name;
+        }
+
+        int end = quality.name.indexOf("p");
+        if (end == -1) {
+            throw new IllegalStateException("Unknown resolution name");
+        }
+
+        return quality.name.substring(0, end + 1);
     }
 }
