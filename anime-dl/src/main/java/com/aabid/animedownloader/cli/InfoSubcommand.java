@@ -38,7 +38,6 @@ public class InfoSubcommand implements Callable<Integer> {
                 try {
                     source.fetchServer(server);
                 } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }
