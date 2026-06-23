@@ -1,6 +1,10 @@
 package com.aabid.animedownloader.cli;
 
+import java.util.Optional;
 import java.util.concurrent.Callable;
+
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
@@ -26,14 +30,14 @@ public class AnimeDownloader implements Callable<Integer> {
     @Option(names = {"-o", "--output"}, description = "Output file name", defaultValue = "output.mp4")
     private String output;
 
+    @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
+    private String quality;
+
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
 
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
-
-    @Parameters(index = "2", description = "Video resolution (e.g. 1080p, 720p, 480p)")
-    private String quality;
 
     private AnimeSource source;
     private M3U8Downloader downloader;
@@ -51,22 +55,35 @@ public class AnimeDownloader implements Callable<Integer> {
             source.fetchServer(server);
         }
 
-        for (Quality q : server.getQualities()) {
-            if (!q.getName().contains(quality)) {
-                continue;
-            }
-
-            if (!q.isResolved()) {
-                source.resolveQuality(q, episode.getSourceLink());
-            }
-
-            downloader.download(q.getLink(), output, System.out, System.err);
-            return 0;
+        Optional<Quality> qualityOpt = getQuality(server, this.quality);
+        if (qualityOpt.isEmpty()) {
+            System.err.println("No stream found.");
+            return -1;
         }
 
+        Quality quality = qualityOpt.get();
+        if (!quality.isResolved()) {
+            source.resolveQuality(quality, episode.getSourceLink());
+        }
 
-        System.out.println("Video not found.");
-        return -1;
+        downloader.download(quality.getLink(), output, System.out, System.err);
+        return 0;
+    }
+
+    private static Optional<Quality> getQuality(@NonNull Server server, @Nullable String quality) {
+        if (quality == null) {
+            return server.getQualities()
+                .stream()
+                .findFirst();
+        }
+
+        for (Quality q : server.getQualities()) {
+            if (q.getName().contains(quality)) {
+                return Optional.of(q);
+            }
+        }
+
+        return Optional.empty();
     }
 
     private static Server getServer(String serverId, Episode episode) {
