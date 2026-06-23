@@ -1,13 +1,11 @@
 package com.aabid.animedownloader.source;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import com.aabid.animedownloader.source.ApiResponse.Provider;
-import com.aabid.animedownloader.source.ApiResponse.StreamQuality;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -54,10 +52,13 @@ public class AnimeSource {
     }
 
     public void resolveQuality(Quality quality, String referer) throws IOException {
+        if (quality.isResolved()) {
+            return;
+        }
+
         TokenBasedQuality tokenBasedQuality = (TokenBasedQuality)quality;
-        String streamLink = "https://tryembed.us.cc/s/" + tokenBasedQuality.getToken() + ".m3u8";
         Request request = new Request.Builder()
-                .url(streamLink)
+                .url(resolveTokenUrl(tokenBasedQuality.getToken()))
                 .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")
@@ -74,6 +75,15 @@ public class AnimeSource {
             tokenBasedQuality.resolve(response.header("Location"));
         }
 
+    }
+
+    private HttpUrl resolveTokenUrl(String token) {
+        return new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST_NAME)
+                .addPathSegment("s")
+                .addPathSegment(token + ".m3u8")
+                .build();
     }
 
     private void refreshCookie(String link) throws IOException {
