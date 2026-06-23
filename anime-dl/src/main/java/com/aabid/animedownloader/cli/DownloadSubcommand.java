@@ -57,7 +57,9 @@ public class DownloadSubcommand implements Callable<Integer> {
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getErr();
 
+        out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
         Episode episode = source.queryAnime(animeId, episodeId);
+
         Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
         if (serverId == null && server == null) {
             err.println("No server available");
@@ -70,6 +72,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         }
 
         if (!server.isReady()) {
+            out.printf("Fetching available qualities from '%s'%n", server.getId());
             source.fetchServer(server);
         }
 
@@ -81,9 +84,11 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         Quality quality = qualityOpt.get();
         if (!quality.isResolved()) {
+            out.printf("Resolving stream link for '%s'%n", quality.getName());
             source.resolveQuality(quality, episode.getSourceLink());
         }
 
+        out.println("Passing stream link to yt-dlp for download");
         downloader.download(quality.getLink(), output, System.out, System.err);
         return 0;
     }
