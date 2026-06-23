@@ -30,9 +30,8 @@ public class Main {
         OkHttpClient client = newClient();
         AnimeSource source = new AnimeSource(client, MAPPER);
 
-        SubcommandFactory factory = new SubcommandFactory(source);
-        AnimeDownloader animeDownloader = new AnimeDownloader(source, downloader);
-        CommandLine commandLine = new CommandLine(animeDownloader, factory);
+        SubcommandFactory factory = new SubcommandFactory(source, downloader);
+        CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
         int code = commandLine.execute(args);
 
         service.shutdown();
