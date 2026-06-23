@@ -3,6 +3,9 @@ package com.aabid.animedownloader.source;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import org.jspecify.annotations.NonNull;
 
 public class Server {
 
@@ -37,6 +40,16 @@ public class Server {
 
     public boolean isReady() {
         return ready;
+    }
+
+    public Optional<Quality> getQuality(@NonNull String name) {
+        for (Quality quality : qualities) {
+            if (quality.getName().equals(name)) {
+                return Optional.of(quality);
+            }
+        }
+
+        return Optional.empty();
     }
 
     public List<Quality> getQualities() {

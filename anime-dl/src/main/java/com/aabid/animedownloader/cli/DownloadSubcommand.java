@@ -100,12 +100,6 @@ public class DownloadSubcommand implements Callable<Integer> {
                 .findFirst();
         }
 
-        for (Quality q : server.getQualities()) {
-            if (q.getName().contains(quality)) {
-                return Optional.of(q);
-            }
-        }
-
-        return Optional.empty();
+        return server.getQuality(quality);
     }
 }
