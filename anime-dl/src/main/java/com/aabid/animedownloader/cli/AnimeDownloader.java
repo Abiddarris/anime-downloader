@@ -2,7 +2,6 @@ package com.aabid.animedownloader.cli;
 
 import java.util.concurrent.Callable;
 
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Spec;
@@ -12,7 +11,7 @@ import picocli.CommandLine.Spec;
     description = "Download anime from tryembed.us.cc",
     mixinStandardHelpOptions = true,
     subcommands = {DownloadSubcommand.class, InfoSubcommand.class},
-    version = "1.0.0"
+    versionProvider = VersionProvider.class
 )
 public class AnimeDownloader implements Callable<Integer> {
 

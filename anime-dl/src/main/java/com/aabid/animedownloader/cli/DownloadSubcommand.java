@@ -22,7 +22,8 @@ import picocli.CommandLine.Model.CommandSpec;
 @Command(
     name = "download",
     description = "Download an anime episode from tryembed.us.cc",
-    mixinStandardHelpOptions = true
+    mixinStandardHelpOptions = true,
+    versionProvider = VersionProvider.class
 )
 public class DownloadSubcommand implements Callable<Integer> {
 
@@ -62,12 +63,12 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
         if (serverId == null && server == null) {
-            err.println("No server available");
+            err.println("No servers available");
             return 1;
         }
 
         if (serverId != null && server == null) {
-            err.printf("No such server with id '%s'\n", serverId);
+            err.printf("Server '%s' not found%n", serverId);
             return 1;
         }
 
@@ -78,7 +79,7 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         Optional<Quality> qualityOpt = getQuality(server, this.quality);
         if (qualityOpt.isEmpty()) {
-            err.println("No stream found.");
+            err.println("No stream available for the selected quality");
             return 1;
         }
 
