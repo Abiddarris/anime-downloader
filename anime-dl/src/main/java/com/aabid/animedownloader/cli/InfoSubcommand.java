@@ -13,7 +13,8 @@ import picocli.CommandLine.Parameters;
 
 @Command(
     name = "info",
-    description = "Fetch and display available servers and qualities for an episode"
+    description = "Fetch and display available servers and qualities for an episode",
+    mixinStandardHelpOptions = true
 )
 public class InfoSubcommand implements Callable<Integer> {
 

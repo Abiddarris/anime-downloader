@@ -18,7 +18,8 @@ import picocli.CommandLine.Parameters;
 
 @Command(
     name = "download",
-    description = "Download an anime episode from tryembed.us.cc"
+    description = "Download an anime episode from tryembed.us.cc",
+    mixinStandardHelpOptions = true
 )
 public class DownloadSubcommand implements Callable<Integer> {
 
