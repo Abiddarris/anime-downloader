@@ -34,7 +34,7 @@ public class Metadata {
     }
 
     @NonNull
-    public String getTitle() {
+    public String getAnimeTitle() {
         return title;
     }
 }

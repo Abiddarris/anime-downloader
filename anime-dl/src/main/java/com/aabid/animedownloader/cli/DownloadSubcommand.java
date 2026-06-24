@@ -69,7 +69,9 @@ public class DownloadSubcommand implements Callable<Integer> {
         PrintWriter err = spec.commandLine().getErr();
 
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
+
         Episode episode = source.queryAnime(animeId, episodeId);
+        out.printf("Found: %s — Episode %d%n", episode.getMetadata().getAnimeTitle(), episodeId);
 
         Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
         if (serverId == null && server == null) {
