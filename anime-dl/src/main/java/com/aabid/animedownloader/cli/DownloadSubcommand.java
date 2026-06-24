@@ -74,13 +74,12 @@ public class DownloadSubcommand implements Callable<Integer> {
         out.printf("Found: %s — Episode %d%n", episode.getMetadata().getAnimeTitle(), episodeId);
 
         Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
-        if (serverId == null && server == null) {
-            err.println("No servers available");
-            return 1;
-        }
-
-        if (serverId != null && server == null) {
-            err.printf("Server '%s' not found%n", serverId);
+        if (server == null) {
+            if (serverId == null) {
+                err.println("No servers available");
+            } else {
+                err.printf("Server '%s' not found%n", serverId);
+            }
             return 1;
         }
 
