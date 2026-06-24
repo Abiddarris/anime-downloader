@@ -9,6 +9,7 @@ import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Parameters;
 
 @Command(
@@ -18,6 +19,9 @@ import picocli.CommandLine.Parameters;
     versionProvider = VersionProvider.class
 )
 public class InfoSubcommand implements Callable<Integer> {
+
+    @Mixin
+    private LoggingMixIn loggingMixIn;
 
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
@@ -33,6 +37,8 @@ public class InfoSubcommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        loggingMixIn.configureLogging();
+
         Episode episode = source.queryAnime(animeId, episodeId);
         for (Server server : episode.getServers()) {
             if (!server.isReady()) {

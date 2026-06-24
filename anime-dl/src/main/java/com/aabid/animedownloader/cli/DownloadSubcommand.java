@@ -16,6 +16,7 @@ import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -33,6 +34,9 @@ public class DownloadSubcommand implements Callable<Integer> {
 
     @Spec
     private CommandSpec spec;
+
+    @Mixin
+    private LoggingMixIn loggingMixIn;
 
     @Option(names = {"-s", "--server"}, description = "ID of server to download from")
     private String serverId;
@@ -59,6 +63,8 @@ public class DownloadSubcommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        loggingMixIn.configureLogging();
+
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getErr();
 
