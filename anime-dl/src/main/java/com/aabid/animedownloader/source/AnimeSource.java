@@ -30,14 +30,14 @@ public class AnimeSource {
         this.mapper = mapper;
     }
 
-    public Episode queryAnime(int animeId, int episode) throws IOException {
+    public Episode queryAnime(int animeId, int episode) throws IOException, AnimeNotFoundException {
         log.info("Querying anime source for animeId: {} (Episode {})", animeId, episode);
 
         String link = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
         getEssentialCookies(link);
 
         ApiResponse response = fetchEpisodeData(animeId, episode, null, link);
-        return ApiResponseParser.parseResponse(response, link);
+        return ApiResponseParser.createEpisode(response, link);
     }
 
     private void getEssentialCookies(@NonNull String link) throws IOException {

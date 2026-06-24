@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
+import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeSource;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
@@ -70,7 +71,13 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
-        Episode episode = source.queryAnime(animeId, episodeId);
+        Episode episode;
+        try {
+            episode = source.queryAnime(animeId, episodeId);
+        } catch (AnimeNotFoundException e) {
+            err.println(e.getMessage());
+            return 1;
+        }
         out.printf("Found: %s — Episode %d%n", episode.getMetadata().getAnimeTitle(), episodeId);
 
         Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();

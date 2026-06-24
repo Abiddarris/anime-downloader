@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.Callable;
 
+import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeSource;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
@@ -46,8 +47,16 @@ public class InfoSubcommand implements Callable<Integer> {
         loggingMixIn.configureLogging();
 
         PrintWriter out = spec.commandLine().getOut();
+        PrintWriter err = spec.commandLine().getOut();
 
-        Episode episode = source.queryAnime(animeId, episodeId);
+        Episode episode;
+        try {
+            episode = source.queryAnime(animeId, episodeId);
+        } catch (AnimeNotFoundException e) {
+            err.println(e.getMessage());
+            return 1;
+        }
+
         for (Server server : episode.getServers()) {
             if (!server.isReady()) {
                 try {

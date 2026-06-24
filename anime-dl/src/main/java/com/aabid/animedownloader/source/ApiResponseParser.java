@@ -10,7 +10,11 @@ import com.aabid.animedownloader.source.ApiResponse.StreamQuality;
 class ApiResponseParser {
 
     @NonNull
-    static Episode parseResponse(@NonNull ApiResponse response, @NonNull String link) {
+    static Episode createEpisode(@NonNull ApiResponse response, @NonNull String link) throws AnimeNotFoundException {
+        if (response.animeTitle == null) {
+            throw new AnimeNotFoundException(response.meta.anilist_id);
+        }
+
         Metadata metadata = new Metadata(response.meta.anilist_id, response.meta.episode, response.animeTitle, link);
         List<@NonNull Server> servers = response.providers.stream()
             .map(provider -> createServer(provider, metadata))
