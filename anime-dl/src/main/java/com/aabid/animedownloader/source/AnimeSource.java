@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.source.ApiResponse.Provider;
 
@@ -18,6 +20,7 @@ public class AnimeSource {
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0";
     private static final String HOST = "https://tryembed.us.cc";
     private static final String HOST_NAME = "tryembed.us.cc";
+    private static final Logger log = LoggerFactory.getLogger(AnimeSource.class);
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
@@ -28,11 +31,67 @@ public class AnimeSource {
     }
 
     public Episode queryAnime(int animeId, int episode) throws IOException {
+        log.info("Querying anime source for animeId: {} (Episode {})", animeId, episode);
+
         String link = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
-        refreshCookie(link);
+        getEssentialCookies(link);
 
         ApiResponse response = fetchEpisodeData(animeId, episode, null, link);
         return ApiResponseParser.parseResponse(response, link);
+    }
+
+    private void getEssentialCookies(@NonNull String link) throws IOException {
+        Request request = new Request.Builder()
+                .url(link)
+                .build();
+
+        log.debug("Fetching essential session cookies from: {}", link);
+        try (Response response = client.newCall(request).execute()) {
+            checkSuccessful(request, response);
+            log.debug("Successfully updated session cookies.");
+        }
+    }
+
+    @Nullable
+    private ApiResponse fetchEpisodeData(
+            int animeId, int episodeNumber, @Nullable String server, @NonNull String referer) throws IOException {
+        log.debug("Fetching episode stream metadata - animeId: {}, episode: {}, server: {}, referer: {}",
+                animeId, episodeNumber, server, referer);
+
+        Request request = new Request.Builder()
+                .url(buildFetchEpisodeAPIUrl(animeId, episodeNumber, server))
+                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Referer", referer)
+                .addHeader("Sec-Fetch-Dest", "empty")
+                .addHeader("Sec-Fetch-Mode", "cors")
+                .build();
+
+        log.debug("Executing API request to: {}", request.url());
+        try (Response response = client.newCall(request).execute()) {
+            checkSuccessful(request, response);
+
+            String apiResponse = response.body().string();
+            log.debug("Received raw JSON response from API: {}", apiResponse);
+
+            return mapper.readValue(apiResponse, ApiResponse.class);
+        }
+    }
+
+    @NonNull
+    private HttpUrl buildFetchEpisodeAPIUrl(int animeId, int episodeNumber, @Nullable String server) {
+        HttpUrl.Builder builder = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST_NAME)
+                .addPathSegment("api")
+                .addPathSegment("stream_data")
+                .addQueryParameter("id", String.valueOf(animeId))
+                .addQueryParameter("episode", String.valueOf(episodeNumber))
+                .addQueryParameter("audio", "sub");
+
+        if (server != null) {
+            builder.addQueryParameter("server", server);
+        }
+        return builder.build();
     }
 
     public void fetchServer(Server server) throws IOException {
@@ -56,6 +115,8 @@ public class AnimeSource {
             return;
         }
 
+        log.info("Resolving direct target file path for quality: {}", quality.getName());
+
         TokenBasedQuality tokenBasedQuality = (TokenBasedQuality)quality;
         Request request = new Request.Builder()
                 .url(resolveTokenUrl(tokenBasedQuality.getToken()))
@@ -72,7 +133,10 @@ public class AnimeSource {
         try (Response response = client.newCall(request).execute()) {
             checkSuccessful(request, response);
 
-            tokenBasedQuality.resolve(response.header("Location"));
+            String realLink = response.header("Location");
+            log.debug("Resolved direct mirror stream link: {}", realLink);
+
+            tokenBasedQuality.resolve(realLink);
         }
 
     }
@@ -84,50 +148,6 @@ public class AnimeSource {
                 .addPathSegment("s")
                 .addPathSegment(token + ".m3u8")
                 .build();
-    }
-
-    private void refreshCookie(String link) throws IOException {
-        Request request = new Request.Builder()
-                .url(link)
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
-        }
-    }
-
-    private @Nullable ApiResponse fetchEpisodeData(
-            int animeId, int episodeNumber, @Nullable String server, @NonNull String referer) throws IOException {
-        Request request = new Request.Builder()
-                .url(buildUrl(animeId, episodeNumber, server))
-                .addHeader("User-Agent", USER_AGENT)
-                .addHeader("Referer", referer)
-                .addHeader("Sec-Fetch-Dest", "empty")
-                .addHeader("Sec-Fetch-Mode", "cors")
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
-
-            return mapper.readValue(response.body().string(), ApiResponse.class);
-        }
-    }
-
-    @NonNull
-    private HttpUrl buildUrl(int animeId, int episodeNumber, @Nullable String server) {
-        HttpUrl.Builder builder = new HttpUrl.Builder()
-            .scheme("https")
-            .host(HOST_NAME)
-            .addPathSegment("api")
-            .addPathSegment("stream_data")
-            .addQueryParameter("id", String.valueOf(animeId))
-            .addQueryParameter("episode", String.valueOf(episodeNumber))
-            .addQueryParameter("audio", "sub");
-
-        if (server != null) {
-            builder.addQueryParameter("server", server);
-        }
-        return builder.build();
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
