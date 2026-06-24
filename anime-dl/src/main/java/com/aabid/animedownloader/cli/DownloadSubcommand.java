@@ -6,6 +6,8 @@ import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
@@ -14,10 +16,10 @@ import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
-import picocli.CommandLine.Model.CommandSpec;
 
 @Command(
     name = "download",
@@ -26,6 +28,8 @@ import picocli.CommandLine.Model.CommandSpec;
     versionProvider = VersionProvider.class
 )
 public class DownloadSubcommand implements Callable<Integer> {
+
+    private static final Logger log = LoggerFactory.getLogger(DownloadSubcommand.class);
 
     @Spec
     private CommandSpec spec;
@@ -94,13 +98,19 @@ public class DownloadSubcommand implements Callable<Integer> {
         return 0;
     }
 
-    private static Optional<Quality> getQuality(@NonNull Server server, @Nullable String quality) {
-        if (quality == null) {
-            return server.getQualities()
+    private static Optional<Quality> getQuality(@NonNull Server server, @Nullable String qualityName) {
+        Optional<Quality> quality;
+        if (qualityName == null) {
+            log.debug("No --quality specified, using first available quality");
+
+            quality = server.getQualities()
                 .stream()
                 .findFirst();
+        } else {
+            quality = server.getQuality(qualityName);
         }
 
-        return server.getQuality(quality);
+        log.debug("Using quality: {}", quality.orElse(null));
+        return quality;
     }
 }
