@@ -1,6 +1,7 @@
 package com.aabid.animedownloader.cli;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.Callable;
 
 import com.aabid.animedownloader.source.AnimeSource;
@@ -11,6 +12,8 @@ import com.aabid.animedownloader.source.Server;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Spec;
+import picocli.CommandLine.Model.CommandSpec;
 
 @Command(
     name = "info",
@@ -19,6 +22,9 @@ import picocli.CommandLine.Parameters;
     versionProvider = VersionProvider.class
 )
 public class InfoSubcommand implements Callable<Integer> {
+
+    @Spec
+    private CommandSpec spec;
 
     @Mixin
     private LoggingMixIn loggingMixIn;
@@ -39,6 +45,8 @@ public class InfoSubcommand implements Callable<Integer> {
     public Integer call() throws Exception {
         loggingMixIn.configureLogging();
 
+        PrintWriter out = spec.commandLine().getOut();
+
         Episode episode = source.queryAnime(animeId, episodeId);
         for (Server server : episode.getServers()) {
             if (!server.isReady()) {
@@ -50,8 +58,8 @@ public class InfoSubcommand implements Callable<Integer> {
         }
 
         String formatting = "%-4s %-13s %-13s %-8s\n";
-        System.out.printf(formatting, "No", "Server Name", "Server Id", "Quality");
-        System.out.println("-".repeat(45));
+        out.printf(formatting, "No", "Server Name", "Server Id", "Quality");
+        out.println("-".repeat(45));
         int no = 0;
         for (Server server : episode.getServers()) {
             if (!server.isReady()) {
@@ -59,7 +67,7 @@ public class InfoSubcommand implements Callable<Integer> {
             }
 
             for (Quality quality : server.getQualities()) {
-                System.out.printf(formatting, ++no, server.getName(), server.getId(), quality.getName());
+                out.printf(formatting, ++no, server.getName(), server.getId(), quality.getName());
             }
         }
 
