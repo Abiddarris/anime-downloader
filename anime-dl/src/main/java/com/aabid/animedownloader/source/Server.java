@@ -9,31 +9,39 @@ import org.jspecify.annotations.NonNull;
 
 public class Server {
 
-    private String id;
-    private String name;
-    private boolean ready;
-    private final List<Quality> qualities = new ArrayList<>();
-    private Episode episode;
+    @NonNull
+    private Metadata metadata;
 
-    public Server(String id, String name, boolean ready, List<Quality> qualities) {
+    @NonNull
+    private String id;
+
+    @NonNull
+    private String name;
+
+    private boolean ready;
+
+    private final List<Quality> qualities = new ArrayList<>();
+
+    public Server(@NonNull Metadata metadata, @NonNull String id,
+                  @NonNull String name, boolean ready, @NonNull List<@NonNull Quality> qualities) {
+        this.metadata = metadata;
         this.id = id;
         this.name = name;
         this.ready = ready;
         this.qualities.addAll(qualities);
     }
 
-    void attach(Episode episode) {
-        this.episode = episode;
+    @NonNull
+    public Metadata getMetadata() {
+        return metadata;
     }
 
-    public Episode getEpisode() {
-        return episode;
-    }
-
+    @NonNull
     public String getId() {
         return id;
     }
 
+    @NonNull
     public String getName() {
         return name;
     }
@@ -56,7 +64,12 @@ public class Server {
         return Collections.unmodifiableList(qualities);
     }
 
-    public void setQualities(List<Quality> qualities) {
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public void setQualities(@NonNull List<Quality> qualities) {
         this.qualities.removeAll(this.qualities);
         this.qualities.addAll(qualities);
         this.ready = true;

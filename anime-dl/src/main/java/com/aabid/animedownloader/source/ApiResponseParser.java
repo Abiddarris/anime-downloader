@@ -11,16 +11,17 @@ class ApiResponseParser {
 
     @NonNull
     static Episode parseResponse(@NonNull ApiResponse response, @NonNull String link) {
-        List<Server> servers = response.providers.stream()
-            .map(ApiResponseParser::createServer)
+        Metadata metadata = new Metadata(response.meta.anilist_id, response.meta.episode, response.animeTitle, link);
+        List<@NonNull Server> servers = response.providers.stream()
+            .map(provider -> createServer(provider, metadata))
             .toList();
-        return new Episode(link, response.meta.anilist_id, response.meta.episode, servers);
+        return new Episode(metadata, servers);
     }
 
     @NonNull
-    static Server createServer(@NonNull Provider provider) {
+    static Server createServer(@NonNull Provider provider, @NonNull Metadata metadata) {
         List<Quality> qualities = createQualities(provider.qualities);
-        return new Server(provider.id, provider.name, provider.status.equals("ready"), qualities);
+        return new Server(metadata, provider.id, provider.name, provider.status.equals("ready"), qualities);
     }
 
     @NonNull

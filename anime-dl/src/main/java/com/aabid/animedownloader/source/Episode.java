@@ -8,20 +8,12 @@ import org.jspecify.annotations.NonNull;
 
 public class Episode {
 
-    private @NonNull String sourceLink;
     private @NonNull List<Server> servers;
-    private int id;
-    private int episode;
+    private @NonNull Metadata metadata;
 
-    public Episode(@NonNull String sourceLink, int id, int episode, @NonNull List<Server> servers) {
-        this.sourceLink = sourceLink;
-        this.id = id;
-        this.episode = episode;
+    public Episode(@NonNull Metadata metadata, @NonNull List<Server> servers) {
+        this.metadata = metadata;
         this.servers = servers;
-
-        for (Server server : servers) {
-            server.attach(this);
-        }
     }
 
     public List<Server> getServers() {
@@ -48,17 +40,21 @@ public class Episode {
             .orElse(null);
     }
 
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
     @NonNull
     public String getSourceLink() {
-        return sourceLink;
+        return metadata.getSource();
     }
 
     public int getId() {
-        return id;
+        return metadata.getAnilistId();
     }
 
     public int getEpisode() {
-        return episode;
+        return metadata.getEpisode();
     }
 
 }

@@ -95,9 +95,11 @@ public class AnimeSource {
     }
 
     public void fetchServer(Server server) throws IOException {
-        Episode episode = server.getEpisode();
+        log.info("Fetching server: {}", server);
+
+        Metadata metadata = server.getMetadata();
         ApiResponse response = fetchEpisodeData(
-            episode.getId(), episode.getEpisode(), server.getId(), episode.getSourceLink()
+            metadata.getAnilistId(), metadata.getEpisode(), server.getId(), metadata.getSource()
         );
         Provider provider = response.providers.stream()
             .filter(p -> p.id.equals(server.getId()))
