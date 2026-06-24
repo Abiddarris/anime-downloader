@@ -96,7 +96,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         Quality quality = qualityOpt.get();
         if (!quality.isResolved()) {
             out.printf("Resolving stream link for '%s'%n", quality.getName());
-            source.resolveQuality(quality, episode.getSourceLink());
+            source.resolveQuality(quality);
         }
 
         out.println("Passing stream link to yt-dlp for download");

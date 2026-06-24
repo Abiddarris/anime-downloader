@@ -109,10 +109,10 @@ public class AnimeSource {
             throw new IOException("server is not ready");
         }
 
-        server.setQualities(ApiResponseParser.createQualities(provider.qualities));
+        server.setQualities(ApiResponseParser.createQualities(provider.qualities, metadata));
     }
 
-    public void resolveQuality(Quality quality, String referer) throws IOException {
+    public void resolveQuality(Quality quality) throws IOException {
         if (quality.isResolved()) {
             return;
         }
@@ -125,7 +125,7 @@ public class AnimeSource {
                 .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")
-                .header("Referer", referer)
+                .header("Referer", quality.getMetadata().getSource())
                 .header("Sec-Fetch-Dest", "empty")
                 .header("Sec-Fetch-Mode", "cors")
                 .header("Sec-Fetch-Site", "same-origin")

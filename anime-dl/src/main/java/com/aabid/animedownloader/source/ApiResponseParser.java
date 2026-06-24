@@ -20,24 +20,24 @@ class ApiResponseParser {
 
     @NonNull
     static Server createServer(@NonNull Provider provider, @NonNull Metadata metadata) {
-        List<Quality> qualities = createQualities(provider.qualities);
+        List<Quality> qualities = createQualities(provider.qualities, metadata);
         return new Server(metadata, provider.id, provider.name, provider.status.equals("ready"), qualities);
     }
 
     @NonNull
-    static List<Quality> createQualities(@NonNull List<StreamQuality> qualities) {
+    static List<Quality> createQualities(@NonNull List<StreamQuality> qualities, @NonNull Metadata metadata) {
         return qualities.stream()
-            .map(ApiResponseParser::createQuality)
+            .map(quality -> createQuality(quality, metadata))
             .toList();
     }
 
     @NonNull
-    static Quality createQuality(StreamQuality quality) {
+    static Quality createQuality(@NonNull StreamQuality quality, @NonNull Metadata metadata) {
         String name = getStandarizedName(quality);
         if (quality.token == null && quality.fallbackToken == null) {
-            return new DirectQuality(name, quality.directUrl);
+            return new DirectQuality(name, metadata, quality.directUrl);
         }
-        return new TokenBasedQuality(name, quality.token, quality.fallbackToken);
+        return new TokenBasedQuality(name, metadata, quality.token, quality.fallbackToken);
     }
 
     private static String getStandarizedName(@NonNull StreamQuality quality) {
