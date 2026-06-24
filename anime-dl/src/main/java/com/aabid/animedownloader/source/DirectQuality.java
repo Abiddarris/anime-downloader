@@ -1,18 +1,13 @@
 package com.aabid.animedownloader.source;
 
-public class DirectQuality implements Quality {
+public class DirectQuality extends Quality {
 
-    private String name;
     private String link;
 
     public DirectQuality(String name, String link) {
-        this.name = name;
-        this.link = link;
-    }
+        super(name);
 
-    @Override
-    public String getName() {
-        return name;
+        this.link = link;
     }
 
     @Override

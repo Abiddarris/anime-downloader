@@ -2,23 +2,18 @@ package com.aabid.animedownloader.source;
 
 import java.util.Objects;
 
-public class TokenBasedQuality implements Quality {
+public class TokenBasedQuality extends Quality {
 
-    private final String name;
     private final String token;
     private final String fallbackToken;
 
     private String link;
 
     public TokenBasedQuality(String name, String token, String fallbackToken) {
-        this.name = name;
+        super(name);
+
         this.token = token;
         this.fallbackToken = fallbackToken;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
