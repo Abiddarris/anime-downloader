@@ -15,6 +15,7 @@ import com.aabid.animedownloader.source.AnimeSource;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
+import com.aabid.animedownloader.source.Server.ServerState;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -90,7 +91,7 @@ public class DownloadSubcommand implements Callable<Integer> {
             return 1;
         }
 
-        if (!server.isReady()) {
+        if (server.getState() != ServerState.READY) {
             out.printf("Fetching available qualities from '%s'%n", server.getId());
             source.fetchServer(server);
         }

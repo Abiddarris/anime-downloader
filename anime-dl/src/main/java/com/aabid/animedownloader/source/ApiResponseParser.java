@@ -5,7 +5,9 @@ import java.util.List;
 import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.source.ApiResponse.Provider;
+import com.aabid.animedownloader.source.ApiResponse.Status;
 import com.aabid.animedownloader.source.ApiResponse.StreamQuality;
+import com.aabid.animedownloader.source.Server.ServerState;
 
 class ApiResponseParser {
 
@@ -25,7 +27,15 @@ class ApiResponseParser {
     @NonNull
     static Server createServer(@NonNull Provider provider, @NonNull Metadata metadata) {
         List<Quality> qualities = createQualities(provider.qualities, metadata);
-        return new Server(metadata, provider.id, provider.name, provider.status.equals("ready"), qualities);
+        return new Server(metadata, provider.id, provider.name, translateStatus(provider.status), qualities);
+    }
+
+    private static ServerState translateStatus(Status status) {
+        return switch (status) {
+            case FAILED -> ServerState.FAILED;
+            case IDLE -> ServerState.IDLE;
+            case READY -> ServerState.READY;
+        };
     }
 
     @NonNull
@@ -59,5 +69,14 @@ class ApiResponseParser {
         }
 
         return quality.name.substring(0, end + 1);
+    }
+
+    static void updateServerStatusFromResponse(Server server, ApiResponse response) {
+        Provider provider = response.providers.stream()
+                .filter(p -> p.id.equals(server.getId()))
+                .findFirst()
+                .get();
+
+        server.resolve(createQualities(provider.qualities, server.getMetadata()), translateStatus(provider.status));
     }
 }

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.source.ApiResponse.Provider;
+import com.aabid.animedownloader.source.Server.ServerState;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -122,19 +123,16 @@ public class AnimeSource {
 
         Metadata metadata = server.getMetadata();
         ApiResponse response = fetchEpisodeData(
-            metadata.getAnilistId(), metadata.getEpisode(), server.getId(), metadata.getSource(), nonces.get(metadata)
+            metadata.getAnilistId(), metadata.getEpisode(),
+            server.getId(), metadata.getSource(), nonces.get(metadata)
         );
         nonces.put(metadata, response.embedNonce);
 
-        Provider provider = response.providers.stream()
-            .filter(p -> p.id.equals(server.getId()))
-            .findFirst()
-            .get();
-        if (!provider.status.equals("ready")) {
+        ApiResponseParser.updateServerStatusFromResponse(server, response);
+
+        if (server.getState() == ServerState.FAILED) {
             throw new IOException("server is not ready");
         }
-
-        server.setQualities(ApiResponseParser.createQualities(provider.qualities, metadata));
     }
 
     public void resolveQuality(Quality quality) throws IOException {

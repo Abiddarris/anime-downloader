@@ -18,16 +18,18 @@ public class Server {
     @NonNull
     private String name;
 
-    private boolean ready;
+    @NonNull
+    private ServerState state;
 
     private final List<Quality> qualities = new ArrayList<>();
 
     public Server(@NonNull Metadata metadata, @NonNull String id,
-                  @NonNull String name, boolean ready, @NonNull List<@NonNull Quality> qualities) {
+                  @NonNull String name, @NonNull ServerState state,
+                  @NonNull List<@NonNull Quality> qualities) {
         this.metadata = metadata;
         this.id = id;
         this.name = name;
-        this.ready = ready;
+        this.state = state;
         this.qualities.addAll(qualities);
     }
 
@@ -46,8 +48,9 @@ public class Server {
         return name;
     }
 
-    public boolean isReady() {
-        return ready;
+    @NonNull
+    public ServerState getState() {
+        return state;
     }
 
     public Optional<Quality> getQuality(@NonNull String name) {
@@ -69,10 +72,13 @@ public class Server {
         return name;
     }
 
-    public void setQualities(@NonNull List<Quality> qualities) {
+    public void resolve(@NonNull List<Quality> qualities, @NonNull ServerState state) {
         this.qualities.removeAll(this.qualities);
         this.qualities.addAll(qualities);
-        this.ready = true;
+        this.state = state;
     }
 
+    public static enum ServerState {
+        IDLE, READY, FAILED
+    }
 }

@@ -2,6 +2,8 @@ package com.aabid.animedownloader.source;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 class ApiResponse {
 
     public List<Provider> providers;
@@ -14,7 +16,7 @@ class ApiResponse {
         public String id;
         public String name;
         public String type;
-        public String status;
+        public Status status;
         public List<StreamQuality> qualities;
     }
 
@@ -35,5 +37,16 @@ class ApiResponse {
         public int anilist_id;
         public int episode;
         public String audio;
+    }
+
+    static enum Status {
+        @JsonProperty("idle")
+        IDLE,
+
+        @JsonProperty("failed")
+        FAILED,
+
+        @JsonProperty("ready")
+        READY
     }
 }

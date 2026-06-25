@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
+import com.aabid.animedownloader.source.Server.ServerState;
+
 import org.jspecify.annotations.NonNull;
 
 public class Episode {
@@ -22,7 +25,7 @@ public class Episode {
 
     public List<Server> getReadyServers() {
         return servers.stream()
-            .filter(Server::isReady)
+            .filter(server -> server.getState() == ServerState.READY)
             .toList();
     }
 
