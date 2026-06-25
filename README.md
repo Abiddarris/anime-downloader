@@ -1,123 +1,142 @@
-# 🚀 anime-downloader (`anime-dl`)
+# anime-downloader (`anime-dl`)
 
-A lightweight command-line utility to fetch, and download anime episodes from `tryembed.us.cc` using AniList IDs. 🍿
+A lightweight command-line tool to download anime episodes from `tryembed.us.cc` using AniList IDs.
 
-## ✨ Features
+## Features
 
-* **🔍 Episode Inspection:** Check available streaming servers and video qualities before downloading.
-* **⚙️ Customizable Downloads:** Specify target resolutions, specific server configurations, and custom output filenames.
-* **📅 AniList Integration:** Native indexing utilizing standard AniList anime and episode IDs.
+- **Episode inspection** — check available servers and qualities before downloading
+- **Quality selection** — specify target resolution or let it pick the best available
+- **Server selection** — target a specific streaming server by ID
+- **AniList integration** — identify anime using standard AniList IDs
 
 ---
 
-## 📦 Installation
+## Installation
 
-The application is distributed as a pre-compiled application bundle via Gradle. 🛠️
+Distributed as a pre-compiled application bundle via Gradle.
 
-1. Head over to the **Releases** page. 📂
-2. Download the preferred archive format for your environment:
-* `anime-dl-0.x.x.zip` 📦
-* `anime-dl-0.x.x.tar` 📦
-
-
-3. Extract the archive to your desired location:
+1. Go to the [Releases](../../releases) page
+2. Download the archive for your platform:
+   - `anime-dl-0.x.x.zip`
+   - `anime-dl-0.x.x.tar`
+3. Extract the archive:
 ```bash
-# For TAR archive
-tar -xvf anime-dl-0.x.x.tar
-
-# For ZIP archive
+# ZIP
 unzip anime-dl-0.x.x.zip
 
+# TAR
+tar -xvf anime-dl-0.x.x.tar
 ```
-
-4. Navigate to the extracted directory and run the binary:
+4. Run the binary:
 ```bash
- cd anime-dl-0.1.0/bin
- ./anime-dl --help
-
+cd anime-dl-0.x.x/bin
+./anime-dl --help
 ```
 
-*(Optional)* 💡 Add the `bin` directory to your system's `PATH` variable for global access.
+Add the `bin` directory to your `PATH` for global access.
 
 ---
 
-## ⚡ Usage
+## Requirements
 
-### 🌐 Global Options
+- Java 17+
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 
-```bash
+---
+
+## Usage
+
+```
 Usage: anime-downloader [-hV] [COMMAND]
+  -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
 
-Options:
-  -h, --help     Show this help message and exit.
-  -V, --version  Print version information and exit.
-
+Commands:
+  download  Download an anime episode from tryembed.us.cc
+  info      Fetch and display available servers and qualities for an episode
 ```
 
-### 1. View Episode Details (`info`) 📋
+### info
 
-Fetch and display available host servers and video streams for a specific episode.
-
-```bash
-./anime-dl info <animeId> <episodeId>
+Fetch and display available servers and qualities for an episode without downloading.
 
 ```
+Usage: anime-downloader info [-hvV] <animeId> <episodeId>
 
-* `<animeId>`: The AniList anime ID.
-* `<episodeId>`: The episode number.
-
-### 2. Download an Episode (`download`) 📥
-
-Stream and save an episode directly to your local storage.
-
-```bash
-./anime-dl download [-o=<output>] [-Q=<quality>] [-s=<serverId>] <animeId> <episodeId>
-
+      <animeId>     AniList anime ID
+      <episodeId>   Episode number
+  -h, --help        Show this help message and exit.
+  -v, --verbose     Enable debug logging
+  -V, --version     Print version information and exit.
 ```
 
-#### Options:
+### download
 
-| Flag | Long Flag | Description | Example |
-| --- | --- | --- | --- |
-| `-o` | `--output` | Custom output file name 💾 | `-o="K-On_S2_Ep08.mp4"` |
-| `-Q` | `--quality` | Video resolution selection 🎬 | `-Q=1080p` (or `720p`, `360p`) |
-| `-s` | `--server` | ID of the specific server to source 🖥️ | `-s=alpha` |
+Download an episode to local storage.
+
+```
+Usage: anime-downloader download [-hvV] [-o=<output>] [-Q=<quality>]
+                                 [-s=<serverId>] <animeId> <episodeId>
+
+      <animeId>             AniList anime ID
+      <episodeId>           Episode number
+  -h, --help                Show this help message and exit.
+  -o, --output=<output>     Output file name
+  -Q, --quality=<quality>   Video resolution (e.g. 1080p, 720p, 480p)
+  -s, --server=<serverId>   Server ID to download from
+  -v, --verbose             Enable debug logging
+  -V, --version             Print version information and exit.
+```
 
 ---
 
-## 📝 Examples
+## Examples
 
-Using **K-ON!! Season 2 (AniList ID: 7791) Episode 8** as an example: 🎸
+Using **K-ON!! Season 2 (AniList ID: 7791) Episode 8** as an example.
 
-**Check available servers and resolutions:**
-
+**Check available servers and qualities:**
 ```bash
-❯ ./anime-dl info 7791 8
-No   Server Name   Server Id    Quality
----------------------------------------------
-1    Alpha Server  alpha         1080p
-2    Alpha Server  alpha         720p
-3    Alpha Server  alpha         360p
-4    Timi Server   timi          1080p
-5    Timi Server   timi          720p
-6    Timi Server   timi          360p
-7    Zen Server    zen           1080p
-8    Zen Server    zen           720p
-9    Zen Server    zen           360p
-10   Beta Server   beta          Default
-
+./anime-dl info 7791 8
+```
+```
+No   Server Name   Server Id   Quality
+-------------------------------------------
+1    Alpha Server  alpha       1080p
+2    Alpha Server  alpha       720p
+3    Alpha Server  alpha       360p
+4    Timi Server   timi        1080p
+5    Timi Server   timi        720p
+6    Timi Server   timi        360p
+7    Zen Server    zen         1080p
+8    Zen Server    zen         720p
+9    Zen Server    zen         360p
+10   Beta Server   beta        Default
 ```
 
-**Download the episode in 1080p:**
-
+**Download at 1080p:**
 ```bash
 ./anime-dl download -Q 1080p 7791 8
-
 ```
 
-**Download from a specific server (e.g., Timi Server) with a custom file name:**
-
+**Download from a specific server with a custom filename:**
 ```bash
 ./anime-dl download -s timi -o "K-ON_S2_EP08.mp4" 7791 8
-
 ```
+
+**Download with verbose logging for debugging:**
+```bash
+./anime-dl download -Q 1080p -v 7791 8
+```
+
+---
+
+## Known Limitations
+
+- Hardsubbed video only (subtitles burned into video)
+- Requires AniList ID — find yours at [anilist.co](https://anilist.co)
+
+---
+
+## License
+
+[Apache 2.0](LICENSE)
