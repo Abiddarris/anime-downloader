@@ -1,6 +1,8 @@
 package com.aabid.animedownloader.source;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -17,13 +19,14 @@ import tools.jackson.databind.ObjectMapper;
 
 public class AnimeSource {
 
-    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0";
+    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
     private static final String HOST = "https://tryembed.us.cc";
     private static final String HOST_NAME = "tryembed.us.cc";
     private static final Logger log = LoggerFactory.getLogger(AnimeSource.class);
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
+    private final Map<Metadata, String> nonces = new HashMap<>();
 
     public AnimeSource(OkHttpClient client, ObjectMapper mapper) {
         this.client = client;
@@ -34,33 +37,49 @@ public class AnimeSource {
         log.info("Querying anime source for animeId: {} (Episode {})", animeId, episode);
 
         String link = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
-        getEssentialCookies(link);
+        String nonce = getCookiesAndRootNonce(link);
 
-        ApiResponse response = fetchEpisodeData(animeId, episode, null, link);
-        return ApiResponseParser.createEpisode(response, link);
+        ApiResponse response = fetchEpisodeData(animeId, episode, null, link, nonce);
+        Episode eps = ApiResponseParser.createEpisode(response, link);
+
+        nonces.put(eps.getMetadata(), response.embedNonce);
+
+        return eps;
     }
 
-    private void getEssentialCookies(@NonNull String link) throws IOException {
+    @NonNull
+    private String getCookiesAndRootNonce(@NonNull String link) throws IOException {
         Request request = new Request.Builder()
                 .url(link)
+                .addHeader("User-Agent", USER_AGENT)
                 .build();
 
-        log.debug("Fetching essential session cookies from: {}", link);
+        log.debug("Fetching cookies and root nonce from: {}", link);
         try (Response response = client.newCall(request).execute()) {
             checkSuccessful(request, response);
-            log.debug("Successfully updated session cookies.");
+
+            String page = response.body().string();
+            int nonceStatementIndex = page.indexOf("window.EMBED_NONCE=\"");
+            int nonceIndex = nonceStatementIndex + "window.EMBED_NONCE=\"".length();;
+            String nonce = page.substring(nonceIndex, page.indexOf('"', nonceIndex));
+
+            log.debug("Successfully updated cookies and root nonce.");
+            return nonce;
         }
     }
 
     @Nullable
     private ApiResponse fetchEpisodeData(
-            int animeId, int episodeNumber, @Nullable String server, @NonNull String referer) throws IOException {
-        log.debug("Fetching episode stream metadata - animeId: {}, episode: {}, server: {}, referer: {}",
-                animeId, episodeNumber, server, referer);
+            int animeId, int episodeNumber, @Nullable String server,
+            @NonNull String referer, @NonNull String nonce) throws IOException {
+        log.debug(
+            "Fetching episode stream metadata - animeId: {}, episode: {}, server: {}, referer: {} nonce: {}",
+            animeId, episodeNumber, server, referer, nonce);
 
         Request request = new Request.Builder()
-                .url(buildFetchEpisodeAPIUrl(animeId, episodeNumber, server))
+                .url(buildFetchEpisodeAPIUrl(animeId, episodeNumber, server, nonce))
                 .addHeader("User-Agent", USER_AGENT)
+                .addHeader("X-Embed-Nonce", nonce)
                 .addHeader("Referer", referer)
                 .addHeader("Sec-Fetch-Dest", "empty")
                 .addHeader("Sec-Fetch-Mode", "cors")
@@ -78,7 +97,8 @@ public class AnimeSource {
     }
 
     @NonNull
-    private HttpUrl buildFetchEpisodeAPIUrl(int animeId, int episodeNumber, @Nullable String server) {
+    private HttpUrl buildFetchEpisodeAPIUrl(
+            int animeId, int episodeNumber, @Nullable String server, @NonNull String nonce) {
         HttpUrl.Builder builder = new HttpUrl.Builder()
                 .scheme("https")
                 .host(HOST_NAME)
@@ -91,6 +111,9 @@ public class AnimeSource {
         if (server != null) {
             builder.addQueryParameter("server", server);
         }
+
+        builder.addQueryParameter("nonce", nonce);
+
         return builder.build();
     }
 
@@ -99,8 +122,10 @@ public class AnimeSource {
 
         Metadata metadata = server.getMetadata();
         ApiResponse response = fetchEpisodeData(
-            metadata.getAnilistId(), metadata.getEpisode(), server.getId(), metadata.getSource()
+            metadata.getAnilistId(), metadata.getEpisode(), server.getId(), metadata.getSource(), nonces.get(metadata)
         );
+        nonces.put(metadata, response.embedNonce);
+
         Provider provider = response.providers.stream()
             .filter(p -> p.id.equals(server.getId()))
             .findFirst()

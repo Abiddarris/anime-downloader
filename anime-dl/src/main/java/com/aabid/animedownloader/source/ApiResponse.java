@@ -8,6 +8,7 @@ class ApiResponse {
     public Provider selectedProvider;
     public Meta meta;
     public String animeTitle;
+    public String embedNonce;
 
     static class Provider {
         public String id;
