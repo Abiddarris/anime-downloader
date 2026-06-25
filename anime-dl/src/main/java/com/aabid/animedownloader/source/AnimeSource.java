@@ -145,7 +145,7 @@ public class AnimeSource {
         TokenBasedQuality tokenBasedQuality = (TokenBasedQuality)quality;
         Request request = new Request.Builder()
                 .url(resolveTokenUrl(tokenBasedQuality.getToken()))
-                .header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0")
+                .header("User-Agent", USER_AGENT)
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")
                 .header("Referer", quality.getMetadata().getSource())
