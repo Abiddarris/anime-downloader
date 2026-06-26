@@ -43,6 +43,8 @@ public class YtDlpM3U8Downloader implements M3U8Downloader {
             Thread.currentThread().interrupt();
             return;
         }
+
+        throw new IOException("yt-dlp exit with exit code: " + process.exitValue());
     }
 
 }
