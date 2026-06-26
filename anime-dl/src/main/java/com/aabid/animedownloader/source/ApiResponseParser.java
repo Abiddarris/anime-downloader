@@ -12,22 +12,23 @@ import com.aabid.animedownloader.source.Server.ServerState;
 class ApiResponseParser {
 
     @NonNull
-    static Episode createEpisode(@NonNull ApiResponse response, @NonNull String link) throws AnimeNotFoundException {
+    static Episode createEpisode(@NonNull ApiResponse response, EpisodeContext context) throws AnimeNotFoundException {
         if (response.animeTitle == null) {
             throw new AnimeNotFoundException(response.meta.anilist_id);
         }
 
-        Metadata metadata = new Metadata(response.meta.anilist_id, response.meta.episode, response.animeTitle, link);
+        Metadata metadata = new Metadata(response.meta.anilist_id, response.meta.episode, response.animeTitle);
         List<@NonNull Server> servers = response.providers.stream()
-            .map(provider -> createServer(provider, metadata))
+            .map(provider -> createServer(provider, context, metadata))
             .toList();
         return new Episode(metadata, servers);
     }
 
     @NonNull
-    static Server createServer(@NonNull Provider provider, @NonNull Metadata metadata) {
-        List<Quality> qualities = createQualities(provider.qualities, metadata);
-        return new Server(metadata, provider.id, provider.name, translateStatus(provider.status), qualities);
+    static Server createServer(@NonNull Provider provider, @NonNull EpisodeContext context,
+                               @NonNull Metadata metadata) {
+        List<Quality> qualities = createQualities(provider.qualities, context, metadata);
+        return new Server(metadata, context, provider.id, provider.name, translateStatus(provider.status), qualities);
     }
 
     private static ServerState translateStatus(Status status) {
@@ -39,19 +40,21 @@ class ApiResponseParser {
     }
 
     @NonNull
-    static List<Quality> createQualities(@NonNull List<StreamQuality> qualities, @NonNull Metadata metadata) {
+    static List<Quality> createQualities(@NonNull List<StreamQuality> qualities,
+                                         @NonNull EpisodeContext context, @NonNull Metadata metadata) {
         return qualities.stream()
-            .map(quality -> createQuality(quality, metadata))
+            .map(quality -> createQuality(quality, context, metadata))
             .toList();
     }
 
     @NonNull
-    static Quality createQuality(@NonNull StreamQuality quality, @NonNull Metadata metadata) {
+    static Quality createQuality(@NonNull StreamQuality quality,
+                                 @NonNull EpisodeContext context, @NonNull Metadata metadata) {
         String name = getStandarizedName(quality);
         if (quality.token == null && quality.fallbackToken == null) {
             return new DirectQuality(name, metadata, quality.directUrl);
         }
-        return new TokenBasedQuality(name, metadata, quality.token, quality.fallbackToken);
+        return new TokenBasedQuality(name, metadata, context, quality.token, quality.fallbackToken);
     }
 
     private static String getStandarizedName(@NonNull StreamQuality quality) {
@@ -77,6 +80,7 @@ class ApiResponseParser {
                 .findFirst()
                 .get();
 
-        server.resolve(createQualities(provider.qualities, server.getMetadata()), translateStatus(provider.status));
+        List<Quality> qualities = createQualities(provider.qualities, server.getContext(), server.getMetadata());
+        server.resolve(qualities, translateStatus(provider.status));
     }
 }

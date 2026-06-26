@@ -13,6 +13,9 @@ public class Server {
     private Metadata metadata;
 
     @NonNull
+    private EpisodeContext context;
+
+    @NonNull
     private String id;
 
     @NonNull
@@ -23,10 +26,11 @@ public class Server {
 
     private final List<Quality> qualities = new ArrayList<>();
 
-    public Server(@NonNull Metadata metadata, @NonNull String id,
+    public Server(@NonNull Metadata metadata, @NonNull EpisodeContext context, @NonNull String id,
                   @NonNull String name, @NonNull ServerState state,
                   @NonNull List<@NonNull Quality> qualities) {
         this.metadata = metadata;
+        this.context = context;
         this.id = id;
         this.name = name;
         this.state = state;
@@ -76,6 +80,10 @@ public class Server {
         this.qualities.removeAll(this.qualities);
         this.qualities.addAll(qualities);
         this.state = state;
+    }
+
+    EpisodeContext getContext() {
+        return context;
     }
 
     public static enum ServerState {

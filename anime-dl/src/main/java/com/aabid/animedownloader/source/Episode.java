@@ -47,11 +47,6 @@ public class Episode {
         return metadata;
     }
 
-    @NonNull
-    public String getSourceLink() {
-        return metadata.getSource();
-    }
-
     public int getId() {
         return metadata.getAnilistId();
     }

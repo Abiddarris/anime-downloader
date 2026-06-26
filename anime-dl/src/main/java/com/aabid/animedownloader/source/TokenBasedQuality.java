@@ -16,12 +16,20 @@ public class TokenBasedQuality extends Quality {
     @Nullable
     private String link;
 
+    @NonNull
+    private EpisodeContext context;
+
     public TokenBasedQuality(@NonNull String name, @NonNull Metadata metadata,
-                             @NonNull String token, @NonNull String fallbackToken) {
+                             @NonNull EpisodeContext context, @NonNull String token, @NonNull String fallbackToken) {
         super(name, metadata);
 
         this.token = token;
+        this.context = context;
         this.fallbackToken = fallbackToken;
+    }
+
+    EpisodeContext getContext() {
+        return context;
     }
 
     @Override

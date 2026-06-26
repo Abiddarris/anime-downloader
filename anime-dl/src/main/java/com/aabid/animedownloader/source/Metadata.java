@@ -10,19 +10,10 @@ public class Metadata {
     @NonNull
     private final String title;
 
-    @NonNull
-    private final String source;
-
-    public Metadata(int anilistId, int episode, @NonNull String title, @NonNull String source) {
+    public Metadata(int anilistId, int episode, @NonNull String title) {
         this.anilistId = anilistId;
         this.episode = episode;
         this.title = title;
-        this.source = source;
-    }
-
-    @NonNull
-    public String getSource() {
-        return source;
     }
 
     public int getAnilistId() {
