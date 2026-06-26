@@ -1,6 +1,8 @@
 package com.aabid.animedownloader.source;
 
 import java.io.IOException;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,13 +11,14 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aabid.animedownloader.source.ApiResponse.Provider;
 import com.aabid.animedownloader.source.Server.ServerState;
 
+import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.java.net.cookiejar.JavaNetCookieJar;
 import tools.jackson.databind.ObjectMapper;
 
 public class AnimeSource {
@@ -30,7 +33,13 @@ public class AnimeSource {
     private final Map<Metadata, String> nonces = new HashMap<>();
 
     public AnimeSource(OkHttpClient client, ObjectMapper mapper) {
-        this.client = client;
+        CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        CookieJar cookieJar = new JavaNetCookieJar(cookieHandler);
+
+        this.client = client.newBuilder()
+            .followRedirects(false)
+            .cookieJar(cookieJar)
+            .build();
         this.mapper = mapper;
     }
 

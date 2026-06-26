@@ -3,8 +3,6 @@
  */
 package com.aabid.animedownloader;
 
-import java.net.CookieManager;
-import java.net.CookiePolicy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,8 +12,6 @@ import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.source.AnimeSource;
 
-import okhttp3.CookieJar;
-import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
 import picocli.CommandLine;
 import tools.jackson.databind.ObjectMapper;
@@ -27,7 +23,7 @@ public class Main {
     public static void main(String[] args) {
         ExecutorService service = Executors.newCachedThreadPool();
         M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
-        OkHttpClient client = newClient();
+        OkHttpClient client = new OkHttpClient.Builder().build();
         AnimeSource source = new AnimeSource(client, MAPPER);
 
         SubcommandFactory factory = new SubcommandFactory(source, downloader);
@@ -37,15 +33,5 @@ public class Main {
         service.shutdown();
 
         System.exit(code);
-    }
-
-    private static OkHttpClient newClient() {
-        CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-        CookieJar cookieJar = new JavaNetCookieJar(cookieHandler);
-        OkHttpClient client = new OkHttpClient.Builder()
-            .followRedirects(false)
-            .cookieJar(cookieJar)
-            .build();
-        return client;
     }
 }
