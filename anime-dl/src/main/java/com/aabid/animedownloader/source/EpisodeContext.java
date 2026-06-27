@@ -8,6 +8,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.net.UserAgentProvider;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -15,8 +17,6 @@ import tools.jackson.databind.ObjectMapper;
 
 class EpisodeContext {
 
-    private static final String HOST = "https://tryembed.us.cc";
-    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
     private static final Logger log = LoggerFactory.getLogger(EpisodeContext.class);
 
     @NonNull
@@ -24,6 +24,9 @@ class EpisodeContext {
 
     @NonNull
     private final ObjectMapper mapper;
+
+    @NonNull
+    private final UserAgentProvider userAgentProvider;
 
     @Nullable
     private String nonce;
@@ -34,9 +37,11 @@ class EpisodeContext {
     private int animeId;
     private int episode;
 
-	EpisodeContext(@NotNull OkHttpClient client, @NonNull ObjectMapper mapper) {
+	EpisodeContext(@NotNull OkHttpClient client, @NonNull ObjectMapper mapper,
+            @NonNull UserAgentProvider userAgentProvider) {
         this.client = client;
         this.mapper = mapper;
+        this.userAgentProvider = userAgentProvider;
 	}
 
     @NonNull
@@ -62,7 +67,7 @@ class EpisodeContext {
     private void fetchCookiesAndRootNonce() throws IOException {
         Request request = new Request.Builder()
                 .url(source)
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("User-Agent", userAgentProvider.getUserAgent())
                 .build();
 
         log.debug("Fetching cookies and root nonce from: {}", source);
@@ -87,7 +92,7 @@ class EpisodeContext {
 
         Request request = new Request.Builder()
                 .url(TryembedUrls.getEpisodeApiUrl(animeId, episode, server, nonce))
-                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("User-Agent", userAgentProvider.getUserAgent())
                 .addHeader("X-Embed-Nonce", nonce)
                 .addHeader("Referer", source)
                 .addHeader("Sec-Fetch-Dest", "empty")

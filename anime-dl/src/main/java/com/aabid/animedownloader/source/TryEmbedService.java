@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.source.Server.ServerState;
 
 import okhttp3.CookieJar;
@@ -18,17 +20,20 @@ import tools.jackson.databind.ObjectMapper;
 
 public class TryEmbedService implements AnimeService {
 
-    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
     private static final Logger log = LoggerFactory.getLogger(TryEmbedService.class);
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
 
-    public TryEmbedService(OkHttpClient client, ObjectMapper mapper) {
+    @NonNull
+    private final UserAgentProvider userAgentProvider;
+
+    public TryEmbedService(OkHttpClient client, ObjectMapper mapper, @NonNull UserAgentProvider userAgentProvider) {
         this.client = client.newBuilder()
             .followRedirects(false)
             .build();
         this.mapper = mapper;
+        this.userAgentProvider = userAgentProvider;
     }
 
     @Override
@@ -42,7 +47,7 @@ public class TryEmbedService implements AnimeService {
                 .cookieJar(cookieJar)
                 .build();
 
-        EpisodeContext context = new EpisodeContext(client, mapper);
+        EpisodeContext context = new EpisodeContext(client, mapper, userAgentProvider);
         ApiResponse response = context.init(animeId, episode);
 
         return ApiResponseParser.createEpisode(response, context);
@@ -72,7 +77,7 @@ public class TryEmbedService implements AnimeService {
         EpisodeContext context = tokenBasedQuality.getContext();
         Request request = new Request.Builder()
                 .url(TryembedUrls.getTokenResolutionUrl(tokenBasedQuality.getToken()))
-                .header("User-Agent", USER_AGENT)
+                .header("User-Agent", userAgentProvider.getUserAgent())
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")
                 .header("Referer", context.getSource())

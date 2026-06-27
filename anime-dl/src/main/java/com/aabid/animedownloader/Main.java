@@ -11,6 +11,8 @@ import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
+import com.aabid.animedownloader.net.StaticUserAgentProvider;
+import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.source.TryEmbedService;
 import com.aabid.animedownloader.source.AnimeService;
 
@@ -20,14 +22,18 @@ import tools.jackson.databind.ObjectMapper;
 
 public class Main {
 
-    public static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
 
     public static void main(String[] args) {
         ExecutorService service = Executors.newCachedThreadPool();
         M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
+
         OkHttpClient client = new OkHttpClient.Builder().build();
-        AnimeService source = new TryEmbedService(client, MAPPER);
-        AnilistService anilistService = new AnilistService(client, MAPPER);
+        ObjectMapper mapper = new ObjectMapper();
+        UserAgentProvider userAgentProvider = new StaticUserAgentProvider(USER_AGENT);
+        AnimeService source = new TryEmbedService(client, mapper, userAgentProvider);
+
+        AnilistService anilistService = new AnilistService(client, mapper);
 
         SubcommandFactory factory = new SubcommandFactory(anilistService, source, downloader);
         CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
