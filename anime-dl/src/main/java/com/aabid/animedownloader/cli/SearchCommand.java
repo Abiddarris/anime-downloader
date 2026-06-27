@@ -1,0 +1,87 @@
+package com.aabid.animedownloader.cli;
+
+import static picocli.CommandLine.Help.Ansi.AUTO;
+
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import org.jspecify.annotations.NonNull;
+
+import com.aabid.animedownloader.anilist.AnilistService;
+import com.aabid.animedownloader.anilist.AnimeEntry;
+
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Spec;
+
+@Command(
+    name = "search",
+    description = "Search for anime on AniList by name or keyword.",
+    mixinStandardHelpOptions = true,
+    versionProvider = VersionProvider.class
+)
+public class SearchCommand implements Callable<Integer> {
+
+    @Spec
+    private CommandSpec spec;
+
+    @Mixin
+    private LoggingMixIn logging;
+
+    @Option(
+        names = { "--page", "-p" },
+        description = "The page number of search results to display (default: ${DEFAULT-VALUE}).",
+        defaultValue = "1"
+    )
+    private int page;
+
+    @Parameters(
+        index = "0",
+        description = "The name or keyword of the anime you want to find."
+    )
+    private String keyword;
+
+    @NonNull
+    private final AnilistService service;
+
+    public SearchCommand(@NonNull AnilistService service) {
+        this.service = service;
+    }
+
+    @Override
+    public Integer call() throws Exception {
+        logging.configureLogging();
+
+        PrintWriter out = spec.commandLine().getOut();
+
+        List<AnimeEntry> result = service.search(keyword, page);
+        out.println(AUTO.string("@|yellow,bold \nSearch Results for:|@ '" + keyword + "' (Page " + page + ")\n"));
+
+        for (int i = 0; i < result.size(); i++) {
+            AnimeEntry entry = result.get(i);
+
+            String episodesStr = (entry.getEpisodeCount() != null) ? entry.getEpisodeCount() + " eps" : "? eps";
+            String primaryTitle = entry.getEnglishTitle().isBlank() ? entry.getRomajiTitle() : entry.getEnglishTitle();
+
+            out.printf(AUTO.string("[%d] @|green %s|@ (%s) [%s] @|faint (ID: %d)|@%n"),
+                    (i + 1),
+                    primaryTitle,
+                    entry.getFormat(),
+                    episodesStr,
+                    entry.getId()
+            );
+
+            if (!primaryTitle.equalsIgnoreCase(entry.getRomajiTitle()) && !entry.getRomajiTitle().isBlank()) {
+                out.printf(AUTO.string("    @|faint %s|@%n"), entry.getRomajiTitle());
+            }
+        }
+
+        out.println();
+        return 0;
+    }
+
+}

@@ -10,7 +10,7 @@ import picocli.CommandLine.Spec;
     name = "anime-downloader",
     description = "Download anime from tryembed.us.cc",
     mixinStandardHelpOptions = true,
-    subcommands = {DownloadSubcommand.class, InfoSubcommand.class},
+    subcommands = {DownloadSubcommand.class, InfoSubcommand.class, SearchCommand.class},
     versionProvider = VersionProvider.class
 )
 public class AnimeDownloader implements Callable<Integer> {

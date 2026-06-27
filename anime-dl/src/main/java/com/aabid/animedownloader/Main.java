@@ -6,6 +6,7 @@ package com.aabid.animedownloader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
@@ -25,8 +26,9 @@ public class Main {
         M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
         OkHttpClient client = new OkHttpClient.Builder().build();
         AnimeSource source = new AnimeSource(client, MAPPER);
+        AnilistService anilistService = new AnilistService(client, MAPPER);
 
-        SubcommandFactory factory = new SubcommandFactory(source, downloader);
+        SubcommandFactory factory = new SubcommandFactory(anilistService, source, downloader);
         CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
         int code = commandLine.execute(args);
 
