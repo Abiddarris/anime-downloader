@@ -11,6 +11,7 @@ import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
+import com.aabid.animedownloader.source.TryEmbedService;
 import com.aabid.animedownloader.source.AnimeService;
 
 import okhttp3.OkHttpClient;
@@ -25,7 +26,7 @@ public class Main {
         ExecutorService service = Executors.newCachedThreadPool();
         M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
         OkHttpClient client = new OkHttpClient.Builder().build();
-        AnimeService source = new AnimeService(client, MAPPER);
+        AnimeService source = new TryEmbedService(client, MAPPER);
         AnilistService anilistService = new AnilistService(client, MAPPER);
 
         SubcommandFactory factory = new SubcommandFactory(anilistService, source, downloader);

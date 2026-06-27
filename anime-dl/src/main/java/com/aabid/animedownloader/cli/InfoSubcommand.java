@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 

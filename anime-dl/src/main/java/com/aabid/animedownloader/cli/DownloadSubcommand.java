@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 import com.aabid.animedownloader.source.Server.ServerState;
