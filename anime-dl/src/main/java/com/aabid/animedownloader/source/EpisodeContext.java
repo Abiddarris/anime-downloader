@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -18,7 +17,6 @@ class EpisodeContext {
 
     private static final String HOST = "https://tryembed.us.cc";
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
-    private static final String HOST_NAME = "tryembed.us.cc";
     private static final Logger log = LoggerFactory.getLogger(EpisodeContext.class);
 
     @NonNull
@@ -55,7 +53,7 @@ class EpisodeContext {
     ApiResponse init(int animeId, int episode) throws IOException, AnimeNotFoundException {
         this.animeId = animeId;
         this.episode = episode;
-        this.source = String.format(HOST + "/embed/anime/%d/%d/sub", animeId, episode);
+        this.source = TryembedUrls.getEpisodeUrl(animeId, episode).toString();
 
         fetchCookiesAndRootNonce();
         return fetchEpisodeData(null);
@@ -88,7 +86,7 @@ class EpisodeContext {
         );
 
         Request request = new Request.Builder()
-                .url(buildFetchEpisodeAPIUrl(animeId, episode, server, nonce))
+                .url(TryembedUrls.getEpisodeApiUrl(animeId, episode, server, nonce))
                 .addHeader("User-Agent", USER_AGENT)
                 .addHeader("X-Embed-Nonce", nonce)
                 .addHeader("Referer", source)
@@ -108,27 +106,6 @@ class EpisodeContext {
 
             return apiResponse;
         }
-    }
-
-    @NonNull
-    private HttpUrl buildFetchEpisodeAPIUrl(
-            int animeId, int episodeNumber, @Nullable String server, @NonNull String nonce) {
-        HttpUrl.Builder builder = new HttpUrl.Builder()
-                .scheme("https")
-                .host(HOST_NAME)
-                .addPathSegment("api")
-                .addPathSegment("stream_data")
-                .addQueryParameter("id", String.valueOf(animeId))
-                .addQueryParameter("episode", String.valueOf(episodeNumber))
-                .addQueryParameter("audio", "sub");
-
-        if (server != null) {
-            builder.addQueryParameter("server", server);
-        }
-
-        builder.addQueryParameter("nonce", nonce);
-
-        return builder.build();
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {

@@ -3,18 +3,13 @@ package com.aabid.animedownloader.source;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.source.Server.ServerState;
 
 import okhttp3.CookieJar;
-import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -24,7 +19,6 @@ import tools.jackson.databind.ObjectMapper;
 public class AnimeService {
 
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
-    private static final String HOST_NAME = "tryembed.us.cc";
     private static final Logger log = LoggerFactory.getLogger(AnimeService.class);
 
     private final OkHttpClient client;
@@ -74,7 +68,7 @@ public class AnimeService {
         TokenBasedQuality tokenBasedQuality = (TokenBasedQuality)quality;
         EpisodeContext context = tokenBasedQuality.getContext();
         Request request = new Request.Builder()
-                .url(resolveTokenUrl(tokenBasedQuality.getToken()))
+                .url(TryembedUrls.getTokenResolutionUrl(tokenBasedQuality.getToken()))
                 .header("User-Agent", USER_AGENT)
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")
@@ -94,15 +88,6 @@ public class AnimeService {
             tokenBasedQuality.resolve(realLink);
         }
 
-    }
-
-    private HttpUrl resolveTokenUrl(String token) {
-        return new HttpUrl.Builder()
-                .scheme("https")
-                .host(HOST_NAME)
-                .addPathSegment("s")
-                .addPathSegment(token + ".m3u8")
-                .build();
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
