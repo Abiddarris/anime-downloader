@@ -4,7 +4,7 @@ import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
-import com.aabid.animedownloader.source.AnimeSource;
+import com.aabid.animedownloader.source.AnimeService;
 
 import picocli.CommandLine;
 import picocli.CommandLine.IFactory;
@@ -12,7 +12,7 @@ import picocli.CommandLine.IFactory;
 public class SubcommandFactory implements IFactory {
 
     @NonNull
-    private AnimeSource source;
+    private AnimeService source;
 
     @NonNull
     private M3U8Downloader downloader;
@@ -21,7 +21,7 @@ public class SubcommandFactory implements IFactory {
     private AnilistService anilistService;
 
     public SubcommandFactory(
-            @NonNull AnilistService anilistService, @NonNull AnimeSource source,
+            @NonNull AnilistService anilistService, @NonNull AnimeService source,
             @NonNull M3U8Downloader downloader) {
         this.anilistService = anilistService;
         this.source = source;

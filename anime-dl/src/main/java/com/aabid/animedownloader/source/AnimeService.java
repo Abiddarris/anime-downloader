@@ -21,16 +21,16 @@ import okhttp3.Response;
 import okhttp3.java.net.cookiejar.JavaNetCookieJar;
 import tools.jackson.databind.ObjectMapper;
 
-public class AnimeSource {
+public class AnimeService {
 
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
     private static final String HOST_NAME = "tryembed.us.cc";
-    private static final Logger log = LoggerFactory.getLogger(AnimeSource.class);
+    private static final Logger log = LoggerFactory.getLogger(AnimeService.class);
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
 
-    public AnimeSource(OkHttpClient client, ObjectMapper mapper) {
+    public AnimeService(OkHttpClient client, ObjectMapper mapper) {
         this.client = client.newBuilder()
             .followRedirects(false)
             .build();

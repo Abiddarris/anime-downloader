@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.AnimeSource;
+import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
@@ -55,10 +55,10 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    private AnimeSource source;
+    private AnimeService source;
     private M3U8Downloader downloader;
 
-    public DownloadSubcommand(AnimeSource source, M3U8Downloader downloader) {
+    public DownloadSubcommand(AnimeService source, M3U8Downloader downloader) {
         this.source = source;
         this.downloader = downloader;
     }

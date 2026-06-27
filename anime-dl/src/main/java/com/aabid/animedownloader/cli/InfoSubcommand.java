@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.AnimeSource;
+import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
@@ -41,9 +41,9 @@ public class InfoSubcommand implements Callable<Integer> {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    private AnimeSource source;
+    private AnimeService source;
 
-    public InfoSubcommand(AnimeSource source) {
+    public InfoSubcommand(AnimeService source) {
         this.source = source;
     }
 
