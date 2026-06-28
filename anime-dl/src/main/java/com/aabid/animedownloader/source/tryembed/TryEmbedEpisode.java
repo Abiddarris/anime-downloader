@@ -24,6 +24,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 class TryEmbedEpisode extends Episode {
@@ -186,8 +187,26 @@ class TryEmbedEpisode extends Episode {
             return;
         }
 
+        ResponseBody responseBody = response.body();
+        if (responseBody == null) {
+            throw new AnimeServiceException("'" + request.url() + "' returns code " + response.code());
+        }
+
+        String body = responseBody.string();
+        String message = body;
+        try {
+            JsonNode tree = mapper.readTree(body);
+            JsonNode errorNode = tree.get("error");
+            if (errorNode != null) {
+                message = errorNode.asString();
+
+            }
+        } catch (JacksonException ignored) {
+        }
+
         throw new AnimeServiceException(
-                "'" + request.url() + "' returns code " + response.code() + ": " + response.body().string());
+            "'" + request.url() + "' returns code " + response.code() + ": " + message
+        );
     }
 
     @Override
