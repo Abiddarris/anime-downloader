@@ -177,15 +177,17 @@ class TryEmbedEpisode extends Episode {
         R consume(Response response) throws IOException, AnimeServiceException;
     }
 
-    private void checkSuccessful(Request request, Response response) throws IOException {
+    private void checkSuccessful(Request request, Response response) throws IOException, AnimeServiceException {
         if (response.isRedirect()) {
             return;
         }
 
-        if (!response.isSuccessful()) {
-            throw new IOException(
-                    "'" + request.url() + "' returns code " + response.code() + ": " + response.body().string());
+        if (response.isSuccessful()) {
+            return;
         }
+
+        throw new AnimeServiceException(
+                "'" + request.url() + "' returns code " + response.code() + ": " + response.body().string());
     }
 
     @Override
