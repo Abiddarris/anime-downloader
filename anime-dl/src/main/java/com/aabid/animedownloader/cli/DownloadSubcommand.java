@@ -1,5 +1,6 @@
 package com.aabid.animedownloader.cli;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -11,11 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.AnimeService;
+import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
-import com.aabid.animedownloader.source.Server.ServerState;
+import com.aabid.animedownloader.source.ServerInfo;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -74,26 +76,38 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         Episode episode;
         try {
-            episode = source.queryAnime(animeId, episodeId);
+            episode = source.queryEpisode(animeId, episodeId);
         } catch (AnimeNotFoundException e) {
             err.println(e.getMessage());
             return 1;
         }
-        out.printf("Found: %s — Episode %d%n", episode.getMetadata().getAnimeTitle(), episodeId);
 
-        Server server = serverId != null ? episode.findServerById(serverId) : episode.getReadyServer();
-        if (server == null) {
-            if (serverId == null) {
-                err.println("No servers available");
-            } else {
-                err.printf("Server '%s' not found%n", serverId);
+        EpisodeInfo episodeInfo = episode.getEpisodeInfo();
+        out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), episodeId);
+
+        Server server = null;
+        if (serverId == null) {
+            for (ServerInfo info : episode.getServers()) {
+                try {
+                    server = episode.fetchServer(info);
+                    break;
+                } catch (IOException e) {
+                    log.warn(e.getMessage());
+                }
             }
-            return 1;
-        }
 
-        if (server.getState() != ServerState.READY) {
-            out.printf("Fetching available qualities from '%s'%n", server.getId());
-            source.fetchServer(server);
+            if (server == null) {
+                err.println("No servers available");
+                return 1;
+            }
+        } else {
+            Optional<ServerInfo> info = episode.findServerById(serverId);
+            if (info.isEmpty()) {
+                err.printf("Server '%s' not found%n", serverId);
+                return 1;
+            }
+
+            server = episode.fetchServer(info.get());
         }
 
         Optional<Quality> qualityOpt = getQuality(server, this.quality);
@@ -103,13 +117,12 @@ public class DownloadSubcommand implements Callable<Integer> {
         }
 
         Quality quality = qualityOpt.get();
-        if (!quality.isResolved()) {
-            out.printf("Resolving stream link for '%s'%n", quality.getName());
-            source.resolveQuality(quality);
-        }
+
+        out.printf("Resolving stream link for '%s'%n", quality.getName());
+        String link = episode.resolveQuality(quality);
 
         out.println("Passing stream link to yt-dlp for download");
-        downloader.download(quality.getLink(), output, System.out, System.err);
+        downloader.download(link, output, System.out, System.err);
         return 0;
     }
 

@@ -2,7 +2,7 @@ package com.aabid.animedownloader.source;
 
 import org.jspecify.annotations.NonNull;
 
-public class Metadata {
+public class EpisodeInfo {
 
     private final int anilistId;
     private final int episode;
@@ -10,7 +10,7 @@ public class Metadata {
     @NonNull
     private final String title;
 
-    public Metadata(int anilistId, int episode, @NonNull String title) {
+    public EpisodeInfo(int anilistId, int episode, @NonNull String title) {
         this.anilistId = anilistId;
         this.episode = episode;
         this.title = title;
@@ -28,4 +28,5 @@ public class Metadata {
     public String getAnimeTitle() {
         return title;
     }
+
 }
