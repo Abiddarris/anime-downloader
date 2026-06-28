@@ -1,5 +1,7 @@
 package com.aabid.animedownloader.cli;
 
+import static picocli.CommandLine.Help.Ansi.AUTO;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -11,7 +13,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
@@ -60,19 +61,22 @@ public class InfoSubcommand implements Callable<Integer> {
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getOut();
 
-        Episode episode;
         try {
-            episode = source.queryEpisode(animeId, episodeId);
-        } catch (AnimeNotFoundException e) {
-            err.println(e.getMessage());
+            return printEpisodeInfo(out, err);
+        } catch (Exception e) {
+            err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
+            log.debug("Detailed Stacktrace: ", e);
             return 1;
         }
+    }
 
+    private int printEpisodeInfo(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
+        Episode episode = source.queryEpisode(animeId, episodeId);
         List<Server> servers = episode.getServers()
-            .stream()
-            .map(server -> fetchServer(episode, server))
-            .filter(Objects::nonNull)
-            .toList();
+                .stream()
+                .map(server -> fetchServer(episode, server))
+                .filter(Objects::nonNull)
+                .toList();
 
         String formatting = "%-4s %-13s %-13s %-8s\n";
         out.printf(formatting, "No", "Server Name", "Server Id", "Quality");
@@ -95,7 +99,7 @@ public class InfoSubcommand implements Callable<Integer> {
             return episode.fetchServer(server);
         } catch (IOException | AnimeServiceException e) {
             log.warn("Failed to fetch qualities for server: {}", server.getId());
-            log.debug("", e);
+            log.debug("Detailed Stacktrace: ", e);
             return null;
         }
     }
