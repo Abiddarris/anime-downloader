@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.source;
+package com.aabid.animedownloader.source.tryembed;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -9,6 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.source.AnimeNotFoundException;
+import com.aabid.animedownloader.source.AnimeService;
+import com.aabid.animedownloader.source.Episode;
 
 import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;

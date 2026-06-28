@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.source;
+package com.aabid.animedownloader.source.tryembed;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -12,14 +12,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.source.ApiResponse.Provider;
+import com.aabid.animedownloader.source.AnimeNotFoundException;
+import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.EpisodeInfo;
+import com.aabid.animedownloader.source.Quality;
+import com.aabid.animedownloader.source.Server;
+import com.aabid.animedownloader.source.ServerInfo;
+import com.aabid.animedownloader.source.tryembed.ApiResponse.Provider;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import tools.jackson.databind.ObjectMapper;
 
-public class TryEmbedEpisode extends Episode {
+class TryEmbedEpisode extends Episode {
 
     private static final Logger log = LoggerFactory.getLogger(TryEmbedEpisode.class);
 

@@ -13,8 +13,8 @@ import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.source.TryEmbedService;
 import com.aabid.animedownloader.source.AnimeService;
+import com.aabid.animedownloader.source.tryembed.TryEmbedService;
 
 import okhttp3.OkHttpClient;
 import picocli.CommandLine;
