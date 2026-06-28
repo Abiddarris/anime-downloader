@@ -1,6 +1,7 @@
 package com.aabid.animedownloader.source.tryembed;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -39,9 +40,6 @@ class TryEmbedEpisode extends Episode {
     @NonNull
     private final UserAgentProvider userAgentProvider;
 
-    @Nullable
-    private String nonce;
-
     @NonNull
     private String source;
 
@@ -50,6 +48,9 @@ class TryEmbedEpisode extends Episode {
 
     @NonNull
     private List<ServerInfo> servers;
+
+    @NonNull
+    private NonceManager nonceManager;
 
     private int animeId;
     private int episode;
@@ -63,15 +64,14 @@ class TryEmbedEpisode extends Episode {
         this.animeId = animeId;
         this.episode = episode;
         this.source = TryembedUrls.getEpisodeUrl(animeId, episode).toString();
-
-        fetchCookiesAndRootNonce();
+        this.nonceManager = new NonceManager(fetchCookiesAndRootNonce());
 
         ApiResponse response = fetchEpisodeData(null);
         this.info = ApiResponseParser.createEpisodeInfo(response);
         this.servers = ApiResponseParser.createServers(response.providers);
 	}
 
-    private void fetchCookiesAndRootNonce() throws IOException {
+    private String fetchCookiesAndRootNonce() throws IOException {
         Request request = new Request.Builder()
                 .url(source)
                 .addHeader("User-Agent", userAgentProvider.getUserAgent())
@@ -79,20 +79,21 @@ class TryEmbedEpisode extends Episode {
 
         log.debug("Fetching cookies and root nonce from: {}", source);
 
-        executeRequest(request, response -> {
+        return executeRequest(request, response -> {
             String page = response.body().string();
             int nonceStatementIndex = page.indexOf("window.EMBED_NONCE=\"");
             int nonceIndex = nonceStatementIndex + "window.EMBED_NONCE=\"".length();
 
-            this.nonce = page.substring(nonceIndex, page.indexOf('"', nonceIndex));
+            String nonce = page.substring(nonceIndex, page.indexOf('"', nonceIndex));
 
             log.debug("Successfully updated cookies and root nonce.");
-            return null;
+            return nonce;
         });
     }
 
     @NonNull
     private ApiResponse fetchEpisodeData(@Nullable String server) throws IOException {
+        String nonce = nonceManager.acquire();
         log.debug(
             "Fetching episode stream metadata - animeId: {}, episode: {}, server: {}, referer: {} nonce: {}",
             animeId, episode, server, source, nonce
@@ -113,7 +114,7 @@ class TryEmbedEpisode extends Episode {
             log.debug("Received raw JSON response from API: {}", apiResponseStr);
 
             ApiResponse apiResponse = mapper.readValue(apiResponseStr, ApiResponse.class);
-            this.nonce = apiResponse.embedNonce;
+            nonceManager.update(apiResponse.embedNonce);
 
             return apiResponse;
         });
