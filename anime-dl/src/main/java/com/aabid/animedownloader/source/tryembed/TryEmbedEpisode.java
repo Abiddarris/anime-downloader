@@ -3,7 +3,7 @@ package com.aabid.animedownloader.source.tryembed;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -78,9 +78,8 @@ class TryEmbedEpisode extends Episode {
                 .build();
 
         log.debug("Fetching cookies and root nonce from: {}", source);
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
 
+        executeRequest(request, response -> {
             String page = response.body().string();
             int nonceStatementIndex = page.indexOf("window.EMBED_NONCE=\"");
             int nonceIndex = nonceStatementIndex + "window.EMBED_NONCE=\"".length();
@@ -88,7 +87,8 @@ class TryEmbedEpisode extends Episode {
             this.nonce = page.substring(nonceIndex, page.indexOf('"', nonceIndex));
 
             log.debug("Successfully updated cookies and root nonce.");
-        }
+            return null;
+        });
     }
 
     @NonNull
@@ -108,9 +108,7 @@ class TryEmbedEpisode extends Episode {
                 .build();
 
         log.debug("Executing API request to: {}", request.url());
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
-
+        return executeRequest(request, response -> {
             String apiResponseStr = response.body().string();
             log.debug("Received raw JSON response from API: {}", apiResponseStr);
 
@@ -118,7 +116,7 @@ class TryEmbedEpisode extends Episode {
             this.nonce = apiResponse.embedNonce;
 
             return apiResponse;
-        }
+        });
     }
 
     @Override
@@ -144,15 +142,26 @@ class TryEmbedEpisode extends Episode {
                 .header("TE", "trailers")
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
-            checkSuccessful(request, response);
-
+        return executeRequest(request, response -> {
             String realLink = response.header("Location");
             log.debug("Resolved direct mirror stream link: {}", realLink);
 
             return realLink;
-        }
+        });
 
+    }
+
+    private <R> R executeRequest(Request request, ResponseConsumer<R> consumer) throws IOException {
+        try (Response response = client.newCall(request).execute()) {
+            checkSuccessful(request, response);
+
+            return consumer.consume(response);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ResponseConsumer<R> {
+        R consume(Response response) throws IOException;
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
