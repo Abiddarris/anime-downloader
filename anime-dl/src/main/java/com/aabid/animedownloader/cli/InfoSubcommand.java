@@ -94,7 +94,8 @@ public class InfoSubcommand implements Callable<Integer> {
         try {
             return episode.fetchServer(server);
         } catch (IOException | AnimeServiceException e) {
-            log.warn("Failed to fetch qualities for server: {}", server.getId(), e);
+            log.warn("Failed to fetch qualities for server: {}", server.getId());
+            log.debug("", e);
             return null;
         }
     }
