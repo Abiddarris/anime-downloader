@@ -16,6 +16,7 @@ import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
+import com.aabid.animedownloader.source.ServerException;
 import com.aabid.animedownloader.source.ServerInfo;
 
 import picocli.CommandLine.Command;
@@ -92,7 +93,7 @@ public class InfoSubcommand implements Callable<Integer> {
     private Server fetchServer(@NonNull Episode episode, @NonNull ServerInfo server) {
         try {
             return episode.fetchServer(server);
-        } catch (IOException e) {
+        } catch (IOException | ServerException e) {
             log.warn("Failed to fetch qualities for server: {}", server.getId(), e);
             return null;
         }

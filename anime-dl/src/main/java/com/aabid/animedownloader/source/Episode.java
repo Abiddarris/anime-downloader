@@ -4,15 +4,21 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.jspecify.annotations.NonNull;
+
 public abstract class Episode {
 
-    public abstract String resolveQuality(Quality quality) throws IOException;
-
+    @NonNull
     public abstract EpisodeInfo getEpisodeInfo();
 
+    @NonNull
     public abstract List<ServerInfo> getServers();
 
-    public abstract Server fetchServer(ServerInfo info) throws IOException;
+    @NonNull
+    public abstract Server fetchServer(ServerInfo info) throws IOException, ServerException;
+
+    @NonNull
+    public abstract String resolveQuality(Quality quality) throws IOException;
 
     public final Optional<ServerInfo> findServerById(String id) {
         return getServers().stream()

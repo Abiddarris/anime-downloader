@@ -9,6 +9,7 @@ import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
+import com.aabid.animedownloader.source.ServerException;
 import com.aabid.animedownloader.source.ServerInfo;
 import com.aabid.animedownloader.source.tryembed.ApiResponse.Provider;
 import com.aabid.animedownloader.source.tryembed.ApiResponse.StreamQuality;
@@ -37,19 +38,17 @@ class ApiResponseParser {
     }
 
     @NonNull
-    static Server createServer(@NonNull ServerInfo server, @NonNull Provider provider) throws IOException {
-         switch (provider.status) {
+    static Server createServer(@NonNull ServerInfo server, @NonNull Provider provider)
+            throws IOException, ServerException {
+        return switch (provider.status) {
             case FAILED -> {
-                throw new IOException("Fail to fetch server");
-            }
-            case READY -> {
-
+                throw new ServerException("Server '" + server.getId() + "' returned a failure status");
             }
             case IDLE -> {
-                throw new AssertionError();
+                throw new ServerException("Server '" + server.getId() + "' is not ready (Unexpected IDLE status)");
             }
+            case READY -> new Server(server, createQualities(provider.qualities));
         };
-        return new Server(server, createQualities(provider.qualities));
     }
 
     @NonNull

@@ -17,6 +17,7 @@ import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
+import com.aabid.animedownloader.source.ServerException;
 import com.aabid.animedownloader.source.ServerInfo;
 import com.aabid.animedownloader.source.tryembed.ApiResponse.Provider;
 
@@ -121,6 +122,7 @@ class TryEmbedEpisode extends Episode {
     }
 
     @Override
+    @NonNull
     public String resolveQuality(Quality quality) throws IOException {
         log.info("Resolving direct target file path for quality: {}", quality.getName());
         if (quality instanceof DirectQuality directQuality) {
@@ -165,17 +167,20 @@ class TryEmbedEpisode extends Episode {
     }
 
     @Override
+    @NonNull
     public EpisodeInfo getEpisodeInfo() {
         return info;
     }
 
     @Override
+    @NonNull
     public List<ServerInfo> getServers() {
         return Collections.unmodifiableList(servers);
     }
 
     @Override
-    public Server fetchServer(ServerInfo info) throws IOException {
+    @NonNull
+    public Server fetchServer(ServerInfo info) throws IOException, ServerException {
         log.info("Fetching server: {}", info);
 
         ApiResponse response = fetchEpisodeData(info.getId());
