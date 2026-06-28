@@ -44,7 +44,7 @@ public class TryEmbedService implements AnimeService {
                 .cookieJar(cookieJar)
                 .build();
 
-        return new Episode(client, mapper, userAgentProvider, animeId, episode);
+        return new TryEmbedEpisode(client, mapper, userAgentProvider, animeId, episode);
     }
 
 }
