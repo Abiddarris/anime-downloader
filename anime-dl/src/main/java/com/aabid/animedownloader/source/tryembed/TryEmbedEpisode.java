@@ -1,10 +1,8 @@
 package com.aabid.animedownloader.source.tryembed;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -13,18 +11,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.source.AnimeNotFoundException;
+import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
-import com.aabid.animedownloader.source.ServerException;
 import com.aabid.animedownloader.source.ServerInfo;
 import com.aabid.animedownloader.source.tryembed.ApiResponse.Provider;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 class TryEmbedEpisode extends Episode {
@@ -57,7 +56,7 @@ class TryEmbedEpisode extends Episode {
 
 	TryEmbedEpisode(@NotNull OkHttpClient client, @NonNull ObjectMapper mapper,
             @NonNull UserAgentProvider userAgentProvider, int animeId, int episode)
-            throws IOException, AnimeNotFoundException {
+            throws IOException, AnimeServiceException {
         this.client = client;
         this.mapper = mapper;
         this.userAgentProvider = userAgentProvider;
@@ -71,7 +70,7 @@ class TryEmbedEpisode extends Episode {
         this.servers = ApiResponseParser.createServers(response.providers);
 	}
 
-    private String fetchCookiesAndRootNonce() throws IOException {
+    private String fetchCookiesAndRootNonce() throws IOException, AnimeServiceException {
         Request request = new Request.Builder()
                 .url(source)
                 .addHeader("User-Agent", userAgentProvider.getUserAgent())
@@ -91,8 +90,9 @@ class TryEmbedEpisode extends Episode {
         });
     }
 
+    @SuppressWarnings("unused")
     @NonNull
-    private ApiResponse fetchEpisodeData(@Nullable String server) throws IOException {
+    private ApiResponse fetchEpisodeData(@Nullable String server) throws IOException, AnimeServiceException {
         String nonce = nonceManager.acquire();
         log.debug(
             "Fetching episode stream metadata - animeId: {}, episode: {}, server: {}, referer: {} nonce: {}",
@@ -110,19 +110,31 @@ class TryEmbedEpisode extends Episode {
 
         log.debug("Executing API request to: {}", request.url());
         return executeRequest(request, response -> {
-            String apiResponseStr = response.body().string();
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new AnimeServiceException("HTTP response body is null");
+            }
+
+            String apiResponseStr = body.string();
             log.debug("Received raw JSON response from API: {}", apiResponseStr);
 
-            ApiResponse apiResponse = mapper.readValue(apiResponseStr, ApiResponse.class);
-            nonceManager.update(apiResponse.embedNonce);
+            try {
+                ApiResponse apiResponse = mapper.readValue(apiResponseStr, ApiResponse.class);
+                if (apiResponse == null) {
+                    throw new AnimeServiceException("Failed to parse API response; deserialized object is null");
+                }
+                nonceManager.update(apiResponse.embedNonce);
 
-            return apiResponse;
+                return apiResponse;
+            } catch (JacksonException e) {
+                throw new AnimeServiceException("Failed to deserialize API response JSON", e);
+            }
         });
     }
 
     @Override
     @NonNull
-    public String resolveQuality(Quality quality) throws IOException {
+    public String resolveQuality(Quality quality) throws IOException, AnimeServiceException {
         log.info("Resolving direct target file path for quality: {}", quality.getName());
         if (quality instanceof DirectQuality directQuality) {
             return directQuality.getLink();
@@ -152,7 +164,7 @@ class TryEmbedEpisode extends Episode {
 
     }
 
-    private <R> R executeRequest(Request request, ResponseConsumer<R> consumer) throws IOException {
+    private <R> R executeRequest(Request request, ResponseConsumer<R> consumer) throws IOException, AnimeServiceException {
         try (Response response = client.newCall(request).execute()) {
             checkSuccessful(request, response);
 
@@ -162,7 +174,7 @@ class TryEmbedEpisode extends Episode {
 
     @FunctionalInterface
     private interface ResponseConsumer<R> {
-        R consume(Response response) throws IOException;
+        R consume(Response response) throws IOException, AnimeServiceException;
     }
 
     private void checkSuccessful(Request request, Response response) throws IOException {
@@ -190,7 +202,7 @@ class TryEmbedEpisode extends Episode {
 
     @Override
     @NonNull
-    public Server fetchServer(ServerInfo info) throws IOException, ServerException {
+    public Server fetchServer(ServerInfo info) throws IOException, AnimeServiceException {
         log.info("Fetching server: {}", info);
 
         ApiResponse response = fetchEpisodeData(info.getId());

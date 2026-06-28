@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeService;
+import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
 
 import okhttp3.CookieJar;
@@ -37,7 +37,7 @@ public class TryEmbedService implements AnimeService {
     }
 
     @Override
-    public Episode queryEpisode(int animeId, int episode) throws IOException, AnimeNotFoundException {
+    public Episode queryEpisode(int animeId, int episode) throws IOException, AnimeServiceException {
         log.info("Querying anime source for animeId: {} (Episode {})", animeId, episode);
 
         CookieManager cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);

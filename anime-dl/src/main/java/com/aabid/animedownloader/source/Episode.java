@@ -15,10 +15,10 @@ public abstract class Episode {
     public abstract List<ServerInfo> getServers();
 
     @NonNull
-    public abstract Server fetchServer(ServerInfo info) throws IOException, ServerException;
+    public abstract Server fetchServer(ServerInfo info) throws IOException, AnimeServiceException;
 
     @NonNull
-    public abstract String resolveQuality(Quality quality) throws IOException;
+    public abstract String resolveQuality(Quality quality) throws IOException, AnimeServiceException;
 
     public final Optional<ServerInfo> findServerById(String id) {
         return getServers().stream()
