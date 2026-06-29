@@ -2,6 +2,8 @@ package com.aabid.animedownloader.cli;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -10,11 +12,12 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.cli.output.OutputFormatter;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeService;
-import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Episode;
+import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 import com.aabid.animedownloader.source.ServerInfo;
@@ -45,7 +48,11 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Option(names = {"-s", "--server"}, description = "ID of server to download from")
     private String serverId;
 
-    @Option(names = {"-o", "--output"}, description = "Output file name", defaultValue = "output.mp4")
+    @Option(
+        names = {"-o", "--output"},
+        description = "Output file name",
+        defaultValue = "{anime_title} #{episode} [{id}].{ext}"
+    )
     private String output;
 
     @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
@@ -71,6 +78,8 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getErr();
+
+        OutputFormatter outputFormatter = new OutputFormatter(output);
 
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
@@ -120,6 +129,15 @@ public class DownloadSubcommand implements Callable<Integer> {
 
         out.printf("Resolving stream link for '%s'%n", quality.getName());
         String link = episode.resolveQuality(quality);
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("id", episodeInfo.getAnilistId());
+        metadata.put("episode", episodeInfo.getEpisode());
+        metadata.put("anime_title", episodeInfo.getAnimeTitle());
+        metadata.put("ext", "%(ext)s");
+
+        String output = outputFormatter.format(metadata);
+        log.debug("Output filename: {}", output);
 
         out.println("Passing stream link to yt-dlp for download");
         downloader.download(link, output, System.out, System.err);
