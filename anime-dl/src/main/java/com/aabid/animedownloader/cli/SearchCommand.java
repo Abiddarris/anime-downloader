@@ -2,11 +2,14 @@ package com.aabid.animedownloader.cli;
 
 import static picocli.CommandLine.Help.Ansi.AUTO;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.anilist.AnimeEntry;
@@ -25,6 +28,8 @@ import picocli.CommandLine.Spec;
     versionProvider = VersionProvider.class
 )
 public class SearchCommand implements Callable<Integer> {
+
+    private static final Logger log = LoggerFactory.getLogger(SearchCommand.class);
 
     @Spec
     private CommandSpec spec;
@@ -57,7 +62,18 @@ public class SearchCommand implements Callable<Integer> {
         logging.configureLogging();
 
         PrintWriter out = spec.commandLine().getOut();
+        PrintWriter err = spec.commandLine().getErr();
 
+        try {
+            return search(out);
+        } catch (Exception e) {
+            err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
+            log.debug("Detailed Stacktrace: ", e);
+            return 1;
+        }
+    }
+
+    private Integer search(PrintWriter out) throws IOException {
         List<AnimeEntry> result = service.search(keyword, page);
         out.println(AUTO.string("@|yellow,bold \nSearch Results for:|@ '" + keyword + "' (Page " + page + ")\n"));
 
