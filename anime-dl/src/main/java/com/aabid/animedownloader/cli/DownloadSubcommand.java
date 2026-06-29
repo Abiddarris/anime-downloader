@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.cli.output.OutputFormatter;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
-import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
@@ -54,9 +53,11 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Option(
         names = {"-o", "--output"},
         description = "Output file name",
-        defaultValue = "{anime_title} #{episode} [{id}].{ext}"
+        defaultValue = "{anime_title} #{episode} [{id}].{ext}",
+        converter = OutputFormatterConverter.class,
+        paramLabel = "output"
     )
-    private String output;
+    private OutputFormatter outputFormatter;
 
     @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
     private String quality;
@@ -91,9 +92,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         }
     }
 
-    private Integer download(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
-        OutputFormatter outputFormatter = new OutputFormatter(output);
-
+    private int download(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
         Episode episode = source.queryEpisode(animeId, episodeId);
