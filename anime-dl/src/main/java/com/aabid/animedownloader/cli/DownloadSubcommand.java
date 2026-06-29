@@ -1,5 +1,7 @@
 package com.aabid.animedownloader.cli;
 
+import static picocli.CommandLine.Help.Ansi.AUTO;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import com.aabid.animedownloader.cli.output.OutputFormatter;
 import com.aabid.animedownloader.m3u8.M3U8Downloader;
 import com.aabid.animedownloader.source.AnimeNotFoundException;
 import com.aabid.animedownloader.source.AnimeService;
+import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
@@ -79,19 +82,23 @@ public class DownloadSubcommand implements Callable<Integer> {
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getErr();
 
+        try {
+            return download(out, err);
+        } catch (Exception e) {
+            err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
+            log.debug("Detailed Stacktrace: ", e);
+            return 1;
+        }
+    }
+
+    private Integer download(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
         OutputFormatter outputFormatter = new OutputFormatter(output);
 
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
-        Episode episode;
-        try {
-            episode = source.queryEpisode(animeId, episodeId);
-        } catch (AnimeNotFoundException e) {
-            err.println(e.getMessage());
-            return 1;
-        }
-
+        Episode episode = source.queryEpisode(animeId, episodeId);
         EpisodeInfo episodeInfo = episode.getEpisodeInfo();
+
         out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), episodeId);
 
         Server server = null;
@@ -130,6 +137,14 @@ public class DownloadSubcommand implements Callable<Integer> {
         out.printf("Resolving stream link for '%s'%n", quality.getName());
         String link = episode.resolveQuality(quality);
 
+        String output = getOutputName(outputFormatter, episodeInfo);
+
+        out.println("Passing stream link to yt-dlp for download");
+        downloader.download(link, output, System.out, System.err);
+        return 0;
+    }
+
+    private String getOutputName(OutputFormatter outputFormatter, EpisodeInfo episodeInfo) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", episodeInfo.getAnilistId());
         metadata.put("episode", episodeInfo.getEpisode());
@@ -139,9 +154,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         String output = outputFormatter.format(metadata);
         log.debug("Output filename: {}", output);
 
-        out.println("Passing stream link to yt-dlp for download");
-        downloader.download(link, output, System.out, System.err);
-        return 0;
+        return output;
     }
 
     private static Optional<Quality> getQuality(@NonNull Server server, @Nullable String qualityName) {
