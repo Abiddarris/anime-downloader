@@ -39,6 +39,8 @@ public class OutputFormatter {
             normalTextStart = matcher.end();
         }
 
+        formatBuilder.append(format.substring(normalTextStart));
+
         this.format = formatBuilder.toString();
     }
 
