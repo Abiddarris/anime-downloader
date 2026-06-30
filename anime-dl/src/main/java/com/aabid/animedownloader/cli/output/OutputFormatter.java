@@ -3,43 +3,63 @@ package com.aabid.animedownloader.cli.output;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jspecify.annotations.NonNull;
 
 public class OutputFormatter {
 
-    private static final Pattern OUTPUT_FORMAT_PATTERN = Pattern.compile("(\\{.+?\\})");
+    @NonNull
+    private final String format;
 
     @NonNull
-    private String format;
-
-    @NonNull
-    private List<String> names = new ArrayList<>();
+    private final List<String> names = new ArrayList<>();
 
     public OutputFormatter(@NonNull String format) {
-        Matcher matcher = OUTPUT_FORMAT_PATTERN.matcher(format);
         StringBuilder formatBuilder = new StringBuilder();
-        int normalTextStart = 0;
+
+        boolean insideBracket = false;
+        int bracketStart = 0;
+        int bracketEnd = -1;
         int argumentIndex = 1;
-        while (matcher.find()) {
-            String name = format.substring(matcher.start() + 1, matcher.end() - 1);
+        for (int i = 0; i < format.length(); i++) {
+            char c = format.charAt(i);
+            if (!insideBracket && c == '{') {
+                bracketStart = i;
+                insideBracket = true;
 
-            formatBuilder.append(format.substring(normalTextStart, matcher.start()));
-
-            if (names.contains(name)) {
-                formatBuilder.append(String.format("%%%d$s", names.indexOf(name) + 1));
-            } else {
-                formatBuilder.append(String.format("%%%d$s", argumentIndex++));
+                formatBuilder.append(format.substring(bracketEnd + 1, bracketStart));
+                continue;
+            } else if (insideBracket && c == '{') {
+                throw new IllegalArgumentException("Illegal { character inside bracket");
             }
 
-            names.add(name);
+            if (insideBracket && c == '}') {
+                String name = format.substring(bracketStart + 1, i);
+                if (name.isEmpty()) {
+                    throw new IllegalArgumentException(String.format("{%s} block should not be empty", name));
+                }
 
-            normalTextStart = matcher.end();
+                if (names.contains(name)) {
+                    formatBuilder.append(String.format("%%%d$s", names.indexOf(name) + 1));
+                } else {
+                    formatBuilder.append(String.format("%%%d$s", argumentIndex++));
+                }
+
+                names.add(name);
+
+                bracketEnd = i;
+                insideBracket = false;
+                continue;
+            } else if (!insideBracket && c == '}') {
+                throw new IllegalArgumentException("Illegal } character without opening bracket");
+            }
         }
 
-        formatBuilder.append(format.substring(normalTextStart));
+        if (insideBracket) {
+            throw new IllegalArgumentException("Missing }");
+        }
+
+        formatBuilder.append(format.substring(bracketEnd + 1, format.length()));
 
         this.format = formatBuilder.toString();
     }
