@@ -23,9 +23,8 @@ public class DefaultProgramInvoker implements ProgramInvoker {
     }
 
     @Override
-    public <T extends StreamConsumer> Program<T> invoke(
-        Path workingDirectory, String[] args, StreamConsumerFactory<T> factory
-    ) throws IOException {
+    public Program invoke(Path workingDirectory, StreamConsumer output, StreamConsumer error, String... args)
+            throws IOException {
         List<String> arguments = new LinkedList<>();
         arguments.add(program);
         arguments.addAll(List.of(args));
@@ -34,10 +33,6 @@ public class DefaultProgramInvoker implements ProgramInvoker {
         builder.directory(workingDirectory.toFile());
 
         Process process = builder.start();
-
-        T output = factory.newStreamConsumer();
-        T error = factory.newStreamConsumer();
-
         Future<Void> outputFuture = executor.submit(() -> {
             output.consume(process.getInputStream());
             return null;
@@ -48,38 +43,21 @@ public class DefaultProgramInvoker implements ProgramInvoker {
             return null;
         });
 
-        return new ProgramImpl<T>(
-            process, output, error, outputFuture, errorFuture
-        );
+        return new ProgramImpl(process, outputFuture, errorFuture);
     }
 
-    private static class ProgramImpl<T extends StreamConsumer> implements Program<T> {
+    private static class ProgramImpl implements Program {
 
         private Process process;
-        private T output;
-        private T error;
         private Future<Void> outputFuture;
         private Future<Void> errorFuture;
 
         public ProgramImpl(
-            Process process, T output, T error,
-            Future<Void> outputFuture, Future<Void> errorFuture
+            Process process, Future<Void> outputFuture, Future<Void> errorFuture
         ) {
             this.process = process;
-            this.output = output;
-            this.error = error;
             this.outputFuture = outputFuture;
             this.errorFuture = errorFuture;
-        }
-
-        @Override
-        public T getOutputStreamConsumer() {
-            return output;
-        }
-
-        @Override
-        public T getErrorStreamConsumer() {
-            return error;
         }
 
         @Override

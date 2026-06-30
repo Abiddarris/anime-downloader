@@ -1,7 +1,5 @@
 package com.aabid.animedownloader.utils.program;
 
-public interface Program<T extends StreamConsumer> {
-    T getOutputStreamConsumer();
-    T getErrorStreamConsumer();
+public interface Program {
     int getExitCode() throws InterruptedException;
 }

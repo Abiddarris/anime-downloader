@@ -15,6 +15,8 @@ import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.tryembed.TryEmbedService;
+import com.aabid.animedownloader.utils.program.DefaultProgramInvoker;
+import com.aabid.animedownloader.utils.program.ProgramInvoker;
 
 import okhttp3.OkHttpClient;
 import picocli.CommandLine;
@@ -26,7 +28,8 @@ public class Main {
 
     public static void main(String[] args) {
         ExecutorService service = Executors.newCachedThreadPool();
-        M3U8Downloader downloader = new YtDlpM3U8Downloader(service);
+        ProgramInvoker invoker = new DefaultProgramInvoker("yt-dlp", service);
+        M3U8Downloader downloader = new YtDlpM3U8Downloader(invoker);
 
         OkHttpClient client = new OkHttpClient.Builder().build();
         ObjectMapper mapper = new ObjectMapper();

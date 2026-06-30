@@ -4,7 +4,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public interface ProgramInvoker {
-    <T extends StreamConsumer> Program<T> invoke(
-        Path workingDirectory, String[] args, StreamConsumerFactory<T> factory
+
+    default Program invoke(
+        StreamConsumer output, StreamConsumer error, String... args
+    ) throws IOException {
+        return invoke(Path.of("."), output, error, args);
+    }
+
+    Program invoke(
+        Path workingDirectory, StreamConsumer output, StreamConsumer error, String... args
     ) throws IOException;
 }
