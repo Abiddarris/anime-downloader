@@ -18,11 +18,6 @@ jar {
     }
 }
 
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
-}
-
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation libs.junit.jupiter
@@ -38,6 +33,8 @@ dependencies {
     implementation "info.picocli:picocli:4.7.7"
     implementation "org.slf4j:slf4j-api:2.0.18"
     implementation 'ch.qos.logback:logback-classic:1.5.34'
+    implementation "com.github.Abiddarris:Common-Library:0.1.0"
+
     implementation libs.guava
 }
 
