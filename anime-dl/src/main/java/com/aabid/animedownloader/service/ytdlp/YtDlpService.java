@@ -23,7 +23,7 @@ public class YtDlpService {
     }
 
     public void download(DownloadConfiguration configuration, String link, Path out)
-            throws IOException, YtDlpInvocationException, InterruptedException {
+            throws IOException, YtDlpInvocationException, InterruptedException, HttpException {
         Objects.requireNonNull(configuration, "configuration must not be null");
         Objects.requireNonNull(link, "link must not be null");
         Objects.requireNonNull(out, "out must not be null");

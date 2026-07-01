@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
+import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
 import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
 import com.aabid.animedownloader.service.ytdlp.YtDlpService;
@@ -45,7 +46,7 @@ public class YtDlpM3U8Downloader implements M3U8Downloader {
         YtDlpService service = new YtDlpService(invoker);
         try {
             service.download(configuration, url, new File(dest).toPath());
-        } catch (YtDlpInvocationException | InterruptedException e) {
+        } catch (YtDlpInvocationException | HttpException | InterruptedException e) {
             throw new IOException(e);
         }
     }
