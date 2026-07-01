@@ -4,7 +4,10 @@ import static picocli.CommandLine.Help.Ansi.AUTO;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -15,9 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.cli.output.OutputFormatter;
-import com.aabid.animedownloader.m3u8.M3U8Downloader;
+import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
+import com.aabid.animedownloader.service.ytdlp.HttpException;
+import com.aabid.animedownloader.service.ytdlp.Retries;
+import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
+import com.aabid.animedownloader.service.ytdlp.YtDlpService;
 import com.aabid.animedownloader.source.AnimeService;
-import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
 import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
@@ -69,11 +75,11 @@ public class DownloadSubcommand implements Callable<Integer> {
     private int episodeId;
 
     private AnimeService source;
-    private M3U8Downloader downloader;
+    private YtDlpService ytDlpService;
 
-    public DownloadSubcommand(AnimeService source, M3U8Downloader downloader) {
+    public DownloadSubcommand(AnimeService source, YtDlpService ytDlpService) {
         this.source = source;
-        this.downloader = downloader;
+        this.ytDlpService = ytDlpService;
     }
 
     @Override
@@ -92,7 +98,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         }
     }
 
-    private int download(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
+    private int download(PrintWriter out, PrintWriter err) throws Exception {
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
         Episode episode = source.queryEpisode(animeId, episodeId);
@@ -134,13 +140,38 @@ public class DownloadSubcommand implements Callable<Integer> {
         Quality quality = qualityOpt.get();
 
         out.printf("Resolving stream link for '%s'%n", quality.getName());
-        String link = episode.resolveQuality(quality);
 
+        String link = episode.resolveQuality(quality);
         String output = getOutputName(outputFormatter, episodeInfo);
 
         out.println("Passing stream link to yt-dlp for download");
-        downloader.download(link, output, System.out, System.err);
+        invokeYtDlp(link, Path.of(output));
+
         return 0;
+    }
+
+    private void invokeYtDlp(String url, Path dest) throws IOException, YtDlpInvocationException,
+             InterruptedException, HttpException {
+        List<String> headers = new ArrayList<>();
+        headers.add("User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0");
+        headers.add("Accept: */*");
+        headers.add("Accept-Language: en-US,en;q=0.9");
+        // headers.add("Accept-Encoding: gzip, deflate, br, zstd");
+        headers.add("Origin: https://tryembed.us.cc");
+        headers.add("Referer: https://tryembed.us.cc/");
+        headers.add("Connection: keep-alive");
+        headers.add("Sec-Fetch-Dest: empty");
+        headers.add("Sec-Fetch-Mode: cors");
+        headers.add("Sec-Fetch-Site: cross-site");
+        headers.add("TE: trailers");
+
+        DownloadConfiguration configuration = new DownloadConfiguration.Builder()
+            .setHeaders(headers)
+            .setFragmentRetries(Retries.infinite())
+            .setBuffersize(1024 * 16)
+            .build();
+
+        ytDlpService.download(configuration, url, dest);
     }
 
     private String getOutputName(OutputFormatter outputFormatter, EpisodeInfo episodeInfo) {

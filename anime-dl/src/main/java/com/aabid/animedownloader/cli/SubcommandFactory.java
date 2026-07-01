@@ -3,7 +3,7 @@ package com.aabid.animedownloader.cli;
 import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.anilist.AnilistService;
-import com.aabid.animedownloader.m3u8.M3U8Downloader;
+import com.aabid.animedownloader.service.ytdlp.YtDlpService;
 import com.aabid.animedownloader.source.AnimeService;
 
 import picocli.CommandLine;
@@ -15,17 +15,17 @@ public class SubcommandFactory implements IFactory {
     private AnimeService source;
 
     @NonNull
-    private M3U8Downloader downloader;
+    private YtDlpService ytDlpService;
 
     @NonNull
     private AnilistService anilistService;
 
     public SubcommandFactory(
             @NonNull AnilistService anilistService, @NonNull AnimeService source,
-            @NonNull M3U8Downloader downloader) {
+            @NonNull YtDlpService ytDlpService) {
         this.anilistService = anilistService;
         this.source = source;
-        this.downloader = downloader;
+        this.ytDlpService = ytDlpService;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class SubcommandFactory implements IFactory {
         if (cls == InfoSubcommand.class) {
             return cls.cast(new InfoSubcommand(source));
         } else if (cls == DownloadSubcommand.class) {
-            return cls.cast(new DownloadSubcommand(source, downloader));
+            return cls.cast(new DownloadSubcommand(source, ytDlpService));
         } else if (cls == SearchCommand.class) {
             return cls.cast(new SearchCommand(anilistService));
         }

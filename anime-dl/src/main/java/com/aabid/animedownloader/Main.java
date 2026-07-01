@@ -9,10 +9,9 @@ import java.util.concurrent.Executors;
 import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
-import com.aabid.animedownloader.m3u8.M3U8Downloader;
-import com.aabid.animedownloader.m3u8.YtDlpM3U8Downloader;
 import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.service.ytdlp.YtDlpService;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.tryembed.TryEmbedService;
 import com.aabid.animedownloader.utils.program.DefaultProgramInvoker;
@@ -29,7 +28,7 @@ public class Main {
     public static void main(String[] args) {
         ExecutorService service = Executors.newCachedThreadPool();
         ProgramInvoker invoker = new DefaultProgramInvoker("yt-dlp", service);
-        M3U8Downloader downloader = new YtDlpM3U8Downloader(invoker);
+        YtDlpService ytDlpService = new YtDlpService(invoker);
 
         OkHttpClient client = new OkHttpClient.Builder().build();
         ObjectMapper mapper = new ObjectMapper();
@@ -38,7 +37,7 @@ public class Main {
 
         AnilistService anilistService = new AnilistService(client, mapper);
 
-        SubcommandFactory factory = new SubcommandFactory(anilistService, source, downloader);
+        SubcommandFactory factory = new SubcommandFactory(anilistService, source, ytDlpService);
         CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
         int code = commandLine.execute(args);
 
