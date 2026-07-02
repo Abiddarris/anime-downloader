@@ -18,10 +18,6 @@ class ApiResponseParser {
 
     @NonNull
     static EpisodeInfo createEpisodeInfo(@NonNull ApiResponse response) throws AnimeNotFoundException {
-        if (response.animeTitle == null) {
-            throw new AnimeNotFoundException(response.meta.anilist_id);
-        }
-
         return new EpisodeInfo(response.meta.anilist_id, response.meta.episode, response.animeTitle);
     }
 
