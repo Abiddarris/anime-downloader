@@ -74,6 +74,9 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
+    private PrintWriter out;
+    private PrintWriter err;
+
     private AnimeService source;
     private YtDlpService ytDlpService;
 
@@ -85,12 +88,11 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         loggingMixIn.configureLogging();
-
-        PrintWriter out = spec.commandLine().getOut();
-        PrintWriter err = spec.commandLine().getErr();
+        out = spec.commandLine().getOut();
+        err = spec.commandLine().getErr();
 
         try {
-            return download(out, err);
+            return download();
         } catch (Exception e) {
             err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
             log.debug("Detailed Stacktrace: ", e);
@@ -98,7 +100,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         }
     }
 
-    private int download(PrintWriter out, PrintWriter err) throws Exception {
+    private int download() throws Exception {
         out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
 
         Episode episode = source.queryEpisode(animeId, episodeId);
@@ -171,7 +173,8 @@ public class DownloadSubcommand implements Callable<Integer> {
             .setBuffersize(1024 * 16)
             .build();
 
-        ytDlpService.download(configuration, url, dest);
+        ProgressPrinter printer = new ProgressPrinter(out);
+        ytDlpService.download(configuration, url, dest, printer::onProgressUpdate);
     }
 
     private String getOutputName(OutputFormatter outputFormatter, EpisodeInfo episodeInfo) {
