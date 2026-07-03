@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.cli.output;
+package com.aabid.animedownloader.utils.format;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.jspecify.annotations.NonNull;
 
-public class OutputFormatter {
+public class NewFormatter {
 
     @NonNull
     private final String format;
@@ -14,7 +14,7 @@ public class OutputFormatter {
     @NonNull
     private final List<String> names = new ArrayList<>();
 
-    public OutputFormatter(@NonNull String format) {
+    public NewFormatter(@NonNull String format) {
         StringBuilder formatBuilder = new StringBuilder();
 
         boolean insideBracket = false;

@@ -17,7 +17,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.aabid.animedownloader.cli.output.OutputFormatter;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
@@ -29,6 +28,7 @@ import com.aabid.animedownloader.source.EpisodeInfo;
 import com.aabid.animedownloader.source.Quality;
 import com.aabid.animedownloader.source.Server;
 import com.aabid.animedownloader.source.ServerInfo;
+import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -63,7 +63,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         converter = OutputFormatterConverter.class,
         paramLabel = "output"
     )
-    private OutputFormatter outputFormatter;
+    private NewFormatter formatter;
 
     @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
     private String quality;
@@ -144,7 +144,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
         String link = episode.resolveQuality(quality);
-        String output = getOutputName(outputFormatter, episodeInfo);
+        String output = getOutputName(formatter, episodeInfo);
 
         out.println("Passing stream link to yt-dlp for download");
         invokeYtDlp(link, Path.of(output));
@@ -177,14 +177,14 @@ public class DownloadSubcommand implements Callable<Integer> {
         ytDlpService.download(configuration, url, dest, printer::onProgressUpdate);
     }
 
-    private String getOutputName(OutputFormatter outputFormatter, EpisodeInfo episodeInfo) {
+    private String getOutputName(NewFormatter formatter, EpisodeInfo episodeInfo) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", episodeInfo.getAnilistId());
         metadata.put("episode", episodeInfo.getEpisode());
         metadata.put("anime_title", episodeInfo.getAnimeTitle());
         metadata.put("ext", "%(ext)s");
 
-        String output = outputFormatter.format(metadata);
+        String output = formatter.format(metadata);
         log.debug("Output filename: {}", output);
 
         return output;
