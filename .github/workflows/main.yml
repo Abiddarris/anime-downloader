@@ -1,0 +1,28 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+      
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Update version in build.gradle
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: "^version = \".*\""
+          replace: "version = \"${{github.event.inputs.version}}\""
+          include: "anime-dl/build.gradle"
+          regex: true
+      - name: Upload Source Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+           name: source-files
+           path: "anime-dl/build.gradle"
+           retention-days: 7
+          
