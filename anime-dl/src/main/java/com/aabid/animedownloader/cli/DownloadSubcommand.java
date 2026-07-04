@@ -68,6 +68,9 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
     private String quality;
 
+    @Option(names = { "-S", "--simulate" }, description = "Do not download the video")
+    private boolean simulate;
+
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
 
@@ -147,7 +150,10 @@ public class DownloadSubcommand implements Callable<Integer> {
         String output = getOutputName(formatter, episodeInfo);
 
         out.println("Passing stream link to yt-dlp for download");
-        invokeYtDlp(link, Path.of(output));
+
+        if (!simulate) {
+            invokeYtDlp(link, Path.of(output));
+        }
 
         return 0;
     }
