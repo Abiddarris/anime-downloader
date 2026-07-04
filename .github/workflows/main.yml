@@ -42,7 +42,7 @@ jobs:
           echo "Updated build.gradle:"
           grep 'version =' anime-dl/build.gradle
           git add anime-dl/build.gradle
-          git commit "chore: update version to $NEW_VERSION in build.gradle"
+          git commit -m "chore: update version to $NEW_VERSION in build.gradle"
       - name: Create new tag
         run: git tag -a v"${{ github.event.inputs.version }}"
       - name: Create changelog
