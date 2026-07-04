@@ -43,16 +43,13 @@ jobs:
           grep 'version =' anime-dl/build.gradle
           git add anime-dl/build.gradle
           git commit -m "chore: update version to $NEW_VERSION in build.gradle"
-      - name: Create new tag
-        run: git tag -a v"${{ github.event.inputs.version }}"
       - name: Create changelog
         run: |
-          git-cliff > CHANGELOG.md
+          git-cliff -t "${{ github.event.inputs.version }}" > CHANGELOG.md
           git add CHANGELOG.md
-          git commit -m "chore: update CHANGELOG.md
-      - name: Recreate tag
+          git commit -m "chore: update CHANGELOG.md"
+      - name: Create new tag
         run: |
-          git tag -d v"${{ github.event.inputs.version }}"
           git tag -a v"${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
       - name: Push to github
         run: |
