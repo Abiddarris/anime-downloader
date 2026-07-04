@@ -32,7 +32,7 @@ jobs:
         run: |
           git-cliff -t v"${{ github.event.inputs.version }}" --unreleased > changelog.txt
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat changelog.txt
+          cat changelog.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Update version in build.gradle
         run: |
