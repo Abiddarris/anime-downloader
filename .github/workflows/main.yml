@@ -13,12 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Update version in build.gradle
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: "^version = \".*\""
-          replace: "version = \"${{github.event.inputs.version}}\""
-          include: "anime-dl/build.gradle"
-          regex: true
+        run: |
+          NEW_VERSION="${{ github.event.inputs.version }}"
+          echo "Setting version to $NEW_VERSION"
+          sed -i "s/version = \".*\"/version = \"$NEW_VERSION\"/" anime-dl/build.gradle
+          echo "Updated build.gradle:"
+          grep 'version =' anime-dl/build.gradle
       - name: Upload Source Artifacts
         uses: actions/upload-artifact@v4
         with:
