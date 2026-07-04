@@ -9,9 +9,31 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions: 
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+           toolchain: stable
+           override: true
+      - name: Install git-cliff via Cargo
+        run: cargo install git-cliff
+      - name: Generate changelog for newest version
+        id: changelog
+        run: |
+          git-cliff -t v"${{ github.event.inputs.version }}" --unreleased > changelog.txt
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.txt
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: Update version in build.gradle
         run: |
           NEW_VERSION="${{ github.event.inputs.version }}"
@@ -19,10 +41,36 @@ jobs:
           sed -i "s/version = \".*\"/version = \"$NEW_VERSION\"/" anime-dl/build.gradle
           echo "Updated build.gradle:"
           grep 'version =' anime-dl/build.gradle
-      - name: Upload Source Artifacts
-        uses: actions/upload-artifact@v4
+          git add anime-dl/build.gradle
+          git commit "chore: update version to $NEW_VERSION in build.gradle"
+      - name: Create new tag
+        run: git tag -a v"${{ github.event.inputs.version }}"
+      - name: Create changelog
+        run: |
+          git-cliff > CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md
+      - name: Recreate tag
+        run: |
+          git tag -d v"${{ github.event.inputs.version }}"
+          git tag -a v"${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+      - name: Push to github
+        run: |
+          git push origin main
+          git push origin v"${{ github.event.inputs.version }}"
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-           name: source-files
-           path: "anime-dl/build.gradle"
-           retention-days: 7
-          
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+      - name: Build with Gradle Wrapper
+        run: ./gradlew build
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: anime-dl/build/distributions/*
+          tag_name: v${{ github.event.inputs.version }}
+          name: Release v${{ github.event.inputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
