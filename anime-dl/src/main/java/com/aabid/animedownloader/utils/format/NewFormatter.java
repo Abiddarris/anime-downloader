@@ -73,4 +73,9 @@ public class NewFormatter {
 
         return String.format(format, args);
     }
+
+    String getJavaFormat() {
+        return format;
+    }
+
 }
