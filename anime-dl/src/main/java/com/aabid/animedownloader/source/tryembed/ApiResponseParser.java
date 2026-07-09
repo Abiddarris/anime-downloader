@@ -18,7 +18,18 @@ class ApiResponseParser {
 
     @NonNull
     static EpisodeInfo createEpisodeInfo(@NonNull ApiResponse response) throws AnimeNotFoundException {
+        checkIfAnimeReallyExists(response);
         return new EpisodeInfo(response.meta.anilist_id, response.meta.episode, response.animeTitle);
+    }
+
+    private static void checkIfAnimeReallyExists(@NonNull ApiResponse response) throws AnimeNotFoundException {
+        if (response.animeTitle != null || response.selectedProvider != null) {
+            return;
+        }
+
+        if (response.outro == null && response.intro == null && response.posterUrl == null) {
+            throw new AnimeNotFoundException(response.meta.anilist_id);
+        }
     }
 
     @NonNull

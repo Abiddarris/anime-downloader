@@ -11,6 +11,9 @@ class ApiResponse {
     public Meta meta;
     public String animeTitle;
     public String embedNonce;
+    public String posterUrl;
+    public Mark intro;
+    public Mark outro;
 
     static class Provider {
         public String id;
@@ -37,6 +40,11 @@ class ApiResponse {
         public int anilist_id;
         public int episode;
         public String audio;
+    }
+
+    static class Mark {
+        public int start;
+        public int end;
     }
 
     static enum Status {
