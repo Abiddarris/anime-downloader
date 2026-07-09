@@ -36,6 +36,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
+import picocli.CommandLine.Help.Visibility;
 
 @Command(
     name = "download",
@@ -61,7 +62,8 @@ public class DownloadSubcommand implements Callable<Integer> {
         description = "Output file name",
         defaultValue = "{anime_title} #{episode} [{id}].{ext}",
         converter = OutputFormatterConverter.class,
-        paramLabel = "output"
+        paramLabel = "output",
+        showDefaultValue = Visibility.ALWAYS
     )
     private NewFormatter formatter;
 
