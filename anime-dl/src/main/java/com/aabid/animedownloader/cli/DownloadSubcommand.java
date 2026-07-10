@@ -149,7 +149,7 @@ public class DownloadSubcommand implements Callable<Integer> {
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
         String link = episode.resolveQuality(quality);
-        String output = getOutputName(formatter, episodeInfo);
+        String output = getOutputName(formatter, episodeInfo, server.getInfo(), quality);
 
         out.println("Passing stream link to yt-dlp for download");
 
@@ -185,12 +185,16 @@ public class DownloadSubcommand implements Callable<Integer> {
         ytDlpService.download(configuration, url, dest, printer::onProgressUpdate);
     }
 
-    private String getOutputName(NewFormatter formatter, EpisodeInfo episodeInfo) {
+    private String getOutputName(@NonNull NewFormatter formatter, @NonNull EpisodeInfo episodeInfo,
+                                 @NonNull ServerInfo serverInfo, @NonNull Quality quality) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", episodeInfo.getAnilistId());
         metadata.put("episode", episodeInfo.getEpisode());
         metadata.put("anime_title", episodeInfo.getAnimeTitle());
         metadata.put("ext", "%(ext)s");
+        metadata.put("server_name", serverInfo.getName());
+        metadata.put("server_id", serverInfo.getId());
+        metadata.put("quality", quality.getName());
 
         String output = formatter.format(metadata);
         log.debug("Output filename: {}", output);
