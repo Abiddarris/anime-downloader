@@ -9,6 +9,10 @@ A lightweight command-line tool to search, inspect, and download anime episodes 
 - **Quality selection** — specify target resolution or let it pick the best available
 - **Server selection** — target a specific streaming server by ID
 - **AniList integration** — identify anime using standard AniList IDs
+- **Custom progress output** — shows download progress without relying on yt-dlp output
+- **Dry-run support** — simulate downloads with `-s/--simulate` flag
+- **Configurable timeouts** — set connection, read, and write timeouts
+- **Enhanced output formatting** — curly bracket escaping and additional format keys
 
 ---
 
@@ -66,13 +70,24 @@ Commands:
 Find an anime's AniList ID by name or keyword — the usual starting point before `info` or `download`.
 
 ```
-Usage: anime-downloader search [-hvV] [-p=<page>] <keyword>
+Usage: anime-downloader search [-hvV] [--connect-timeout=<connectTimeout>]
+                               [-p=<page>] [--read-timeout=<readTimeout>]
+                               [--write-timeout=<writeTimeout>] <keyword>
 Search for anime on AniList by name or keyword.
       <keyword>       The name or keyword of the anime you want to find.
+      --connect-timeout=<connectTimeout>
+                      Connection timeout in milliseconds (0 for no timeout)
+                        Default: 10000
   -h, --help          Show this help message and exit.
   -p, --page=<page>   The page number of search results to display (default: 1).
+      --read-timeout=<readTimeout>
+                      Read timeout in milliseconds (0 for no timeout)
+                        Default: 30000
   -v, --verbose       Enable debug logging
   -V, --version       Print version information and exit.
+      --write-timeout=<writeTimeout>
+                      Write timeout in milliseconds (0 for no timeout)
+                        Default: 10000
 ```
 
 ### info
@@ -80,13 +95,24 @@ Search for anime on AniList by name or keyword.
 Fetch and display available servers and qualities for an episode without downloading.
 
 ```
-Usage: anime-downloader info [-hvV] <animeId> <episodeId>
+Usage: anime-downloader info [-hvV] [--connect-timeout=<connectTimeout>]
+                             [--read-timeout=<readTimeout>]
+                             [--write-timeout=<writeTimeout>] <animeId> <episodeId>
 Fetch and display available servers and qualities for an episode
       <animeId>     AniList anime ID
       <episodeId>   Episode number
+      --connect-timeout=<connectTimeout>
+                    Connection timeout in milliseconds (0 for no timeout)
+                      Default: 10000
   -h, --help        Show this help message and exit.
+      --read-timeout=<readTimeout>
+                    Read timeout in milliseconds (0 for no timeout)
+                      Default: 30000
   -v, --verbose     Enable debug logging
   -V, --version     Print version information and exit.
+      --write-timeout=<writeTimeout>
+                    Write timeout in milliseconds (0 for no timeout)
+                      Default: 10000
 ```
 
 ### download
@@ -94,18 +120,30 @@ Fetch and display available servers and qualities for an episode
 Download an episode to local storage.
 
 ```
-Usage: anime-downloader download [-hvV] [-o=output] [-Q=<quality>]
-                                 [-s=<serverId>] <animeId> <episodeId>
+Usage: anime-downloader download [-hSvV] [--connect-timeout=<connectTimeout>]
+                                 [-o=output] [-Q=<quality>]
+                                 [--read-timeout=<readTimeout>] [-s=<serverId>]
+                                 [--write-timeout=<writeTimeout>] <animeId> <episodeId>
 Download an anime episode from tryembed.us.cc
       <animeId>             AniList anime ID
       <episodeId>           Episode number
+      --connect-timeout=<connectTimeout>
+                            Connection timeout in milliseconds (0 for no timeout)
+                              Default: 10000
   -h, --help                Show this help message and exit.
   -o, --output=output       Output file name
-                            (default: {anime_title} #{episode} [{id}].{ext})
+                              Default: {anime_title} #{episode} [{id}].{ext}
   -Q, --quality=<quality>   Video resolution (e.g. 1080p, 720p, 480p)
+      --read-timeout=<readTimeout>
+                            Read timeout in milliseconds (0 for no timeout)
+                              Default: 30000
   -s, --server=<serverId>   ID of server to download from
+  -S, --simulate            Do not download the video
   -v, --verbose             Enable debug logging
   -V, --version             Print version information and exit.
+      --write-timeout=<writeTimeout>
+                            Write timeout in milliseconds (0 for no timeout)
+                              Default: 10000
 ```
 
 #### Output filename formatting
@@ -113,11 +151,16 @@ Download an anime episode from tryembed.us.cc
 The `-o`/`--output` flag accepts a template string with the following placeholders:
 
 | Placeholder       | Description                          |
-|-------------------|---------------------------------------|
-| `{anime_title}`   | Title of the anime                    |
-| `{episode}`       | Episode number                        |
-| `{id}`            | AniList anime ID                      |
+|-------------------|--------------------------------------|
+| `{anime_title}`   | Title of the anime                   |
+| `{episode}`       | Episode number                       |
+| `{id}`            | AniList anime ID                     |
 | `{ext}`           | File extension (resolved automatically) |
+| `{server_id}`     | ID of the server being used          |
+| `{server_name}`   | Name of the server being used        |
+| `{quality}`       | Selected video quality               |
+
+Curly brackets can be escaped by doubling them: `{{` and `}}`.
 
 If `-o` is omitted, the default template is used:
 
@@ -194,6 +237,24 @@ No   Server Name   Server Id   Quality
 
 ```bash
 ./anime-dl download -Q 1080p -v 7791 8
+```
+
+**Simulate a download (dry-run):**
+
+```bash
+./anime-dl download -S 7791 8
+```
+
+**Download with custom timeouts:**
+
+```bash
+./anime-dl download --connect-timeout=5000 --read-timeout=20000 --write-timeout=5000 7791 8
+```
+
+**Use advanced output formatting with new placeholders:**
+
+```bash
+./anime-dl download -o "{anime_title} [{id}] {quality}p ({server_name}){ext}" 7791 8
 ```
 
 **Search with pagination:**
