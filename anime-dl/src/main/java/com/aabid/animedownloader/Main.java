@@ -5,12 +5,15 @@ package com.aabid.animedownloader;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
+import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.ytdlp.YtDlpService;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.tryembed.TryEmbedService;
@@ -26,23 +29,31 @@ public class Main {
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
 
     public static void main(String[] args) {
+        SubcommandFactory factory = new SubcommandFactory(Main::newProgramServices);
+        CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
+
+        int code = commandLine.execute(args);
+        System.exit(code);
+    }
+
+    private static ProgramServices newProgramServices(ProgramConfiguration configuration) {
         ExecutorService service = Executors.newCachedThreadPool();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> service.shutdown()));
+
         ProgramInvoker invoker = new DefaultProgramInvoker("yt-dlp", service);
         YtDlpService ytDlpService = new YtDlpService(invoker);
 
-        OkHttpClient client = new OkHttpClient.Builder().build();
+        OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(configuration.getConnectTimeout(), TimeUnit.MILLISECONDS)
+            .readTimeout(configuration.getReadTimeout(), TimeUnit.MILLISECONDS)
+            .writeTimeout(configuration.getWriteTimeout(), TimeUnit.MILLISECONDS)
+            .build();
+
         ObjectMapper mapper = new ObjectMapper();
         UserAgentProvider userAgentProvider = new StaticUserAgentProvider(USER_AGENT);
         AnimeService source = new TryEmbedService(client, mapper, userAgentProvider);
 
         AnilistService anilistService = new AnilistService(client, mapper);
-
-        SubcommandFactory factory = new SubcommandFactory(anilistService, source, ytDlpService);
-        CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
-        int code = commandLine.execute(args);
-
-        service.shutdown();
-
-        System.exit(code);
+        return new ProgramServices(anilistService, source, ytDlpService);
     }
 }

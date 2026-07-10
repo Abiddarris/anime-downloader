@@ -13,6 +13,9 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
+import com.aabid.animedownloader.service.animedl.ProgramServices;
+import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.source.AnimeService;
 import com.aabid.animedownloader.source.AnimeServiceException;
 import com.aabid.animedownloader.source.Episode;
@@ -42,6 +45,9 @@ public class InfoSubcommand implements Callable<Integer> {
     @Mixin
     private LoggingMixIn loggingMixIn;
 
+    @Mixin
+    private TimeoutMixIn timeoutMixIn;
+
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
 
@@ -50,13 +56,22 @@ public class InfoSubcommand implements Callable<Integer> {
 
     private AnimeService source;
 
-    public InfoSubcommand(AnimeService source) {
-        this.source = source;
+    @NonNull
+    private ProgramServicesFactory factory;
+
+    public InfoSubcommand(@NonNull ProgramServicesFactory factory) {
+        this.factory = factory;
     }
 
     @Override
     public Integer call() throws Exception {
         loggingMixIn.configureLogging();
+
+        ProgramConfiguration.Builder builder = new ProgramConfiguration.Builder();
+        timeoutMixIn.applyConfiguration(builder);
+
+        ProgramServices services = factory.apply(builder.build());
+        source = services.getSource();
 
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getOut();

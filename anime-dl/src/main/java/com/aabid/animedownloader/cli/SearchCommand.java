@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.anilist.AnimeEntry;
+import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
+import com.aabid.animedownloader.service.animedl.ProgramServices;
+import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -37,6 +40,9 @@ public class SearchCommand implements Callable<Integer> {
     @Mixin
     private LoggingMixIn logging;
 
+    @Mixin
+    private TimeoutMixIn timeoutMixIn;
+
     @Option(
         names = { "--page", "-p" },
         description = "The page number of search results to display (default: ${DEFAULT-VALUE}).",
@@ -50,16 +56,24 @@ public class SearchCommand implements Callable<Integer> {
     )
     private String keyword;
 
-    @NonNull
-    private final AnilistService service;
+    private AnilistService service;
 
-    public SearchCommand(@NonNull AnilistService service) {
-        this.service = service;
+    @NonNull
+    private final ProgramServicesFactory factory;
+
+    public SearchCommand(ProgramServicesFactory factory) {
+        this.factory = factory;
     }
 
     @Override
     public Integer call() throws Exception {
         logging.configureLogging();
+
+        ProgramConfiguration.Builder builder = new ProgramConfiguration.Builder();
+        timeoutMixIn.applyConfiguration(builder);
+
+        ProgramServices services = factory.apply(builder.build());
+        service = services.getAnilistService();
 
         PrintWriter out = spec.commandLine().getOut();
         PrintWriter err = spec.commandLine().getErr();

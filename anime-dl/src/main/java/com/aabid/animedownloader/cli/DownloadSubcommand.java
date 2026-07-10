@@ -17,6 +17,9 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
+import com.aabid.animedownloader.service.animedl.ProgramServices;
+import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
@@ -31,12 +34,12 @@ import com.aabid.animedownloader.source.ServerInfo;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Help.Visibility;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
-import picocli.CommandLine.Help.Visibility;
 
 @Command(
     name = "download",
@@ -53,6 +56,9 @@ public class DownloadSubcommand implements Callable<Integer> {
 
     @Mixin
     private LoggingMixIn loggingMixIn;
+
+    @Mixin
+    private TimeoutMixIn timeoutMixIn;
 
     @Option(names = {"-s", "--server"}, description = "ID of server to download from")
     private String serverId;
@@ -84,15 +90,23 @@ public class DownloadSubcommand implements Callable<Integer> {
 
     private AnimeService source;
     private YtDlpService ytDlpService;
+    private ProgramServicesFactory factory;
 
-    public DownloadSubcommand(AnimeService source, YtDlpService ytDlpService) {
-        this.source = source;
-        this.ytDlpService = ytDlpService;
+    public DownloadSubcommand(ProgramServicesFactory factory) {
+        this.factory = factory;
     }
 
     @Override
     public Integer call() throws Exception {
         loggingMixIn.configureLogging();
+
+        ProgramConfiguration.Builder builder = new ProgramConfiguration.Builder();
+        timeoutMixIn.applyConfiguration(builder);
+
+        ProgramServices services = factory.apply(builder.build());
+        source = services.getSource();
+        ytDlpService = services.getYtDlpService();
+
         out = spec.commandLine().getOut();
         err = spec.commandLine().getErr();
 
