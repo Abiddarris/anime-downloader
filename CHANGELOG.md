@@ -1,3 +1,18 @@
+## [0.4.0] - 2026-07-10
+
+### 🚀 Features
+
+- Implement custom progress output instead of relying on yt-dlp output
+- Add -s/--simulate flag for dry-run downloads
+- Show `--output` default values in `download` subcommand `--help`
+- Add curly brackets escaping feature to formatter utility
+- Add `server_id`, `quality` and `server_name` as keys for output format strings
+- Add configurable network timeout options (--connect-timeout, --read-timeout, --write-timeout)
+
+### 🐛 Bug Fixes
+
+- Do not throw AnimeNotFoundException when animeTitle is null
+- Add additional validation checks before throwing AnimeNotFoundException
 ## [0.3.0] - 2026-07-02
 
 ### 🚀 Features
