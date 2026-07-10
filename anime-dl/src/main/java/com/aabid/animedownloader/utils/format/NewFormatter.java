@@ -6,52 +6,47 @@ import java.util.Map;
 
 import org.jspecify.annotations.NonNull;
 
+import com.aabid.animedownloader.utils.format.Token.Type;
+
 public class NewFormatter {
 
-    @NonNull
-    private final String format;
-
-    @NonNull
-    private final List<String> names = new ArrayList<>();
+    private final List<Statement> statements;
 
     public NewFormatter(@NonNull String format) {
-        StringBuilder formatBuilder = new StringBuilder();
+        this.statements = createStatements(tokenize(format));
+    }
 
+    private List<Statement> createStatements(List<Token> tokens) {
+        List<Statement> statements = new ArrayList<>();
+        StringBuilder temp = new StringBuilder();
         boolean insideBracket = false;
-        int bracketStart = 0;
-        int bracketEnd = -1;
-        int argumentIndex = 1;
-        for (int i = 0; i < format.length(); i++) {
-            char c = format.charAt(i);
-            if (!insideBracket && c == '{') {
-                bracketStart = i;
-                insideBracket = true;
+        for (Token token : tokens) {
+            switch (token.getType()) {
+                case LITERAL -> temp.append(token.getCharacter());
+                case BRACKET_START -> {
+                    if (insideBracket) {
+                        throw new IllegalArgumentException("Illegal { character inside bracket");
+                    }
+                    insideBracket = true;
 
-                formatBuilder.append(format.substring(bracketEnd + 1, bracketStart));
-                continue;
-            } else if (insideBracket && c == '{') {
-                throw new IllegalArgumentException("Illegal { character inside bracket");
-            }
-
-            if (insideBracket && c == '}') {
-                String name = format.substring(bracketStart + 1, i);
-                if (name.isEmpty()) {
-                    throw new IllegalArgumentException(String.format("{%s} block should not be empty", name));
+                    if (!temp.isEmpty()) {
+                        statements.add(new Literal(temp.toString()));
+                        temp.delete(0, temp.length());
+                    }
                 }
+                case BRACKET_END -> {
+                    if (!insideBracket) {
+                        throw new IllegalArgumentException("Illegal } character without opening bracket");
+                    }
+                    insideBracket = false;
 
-                if (names.contains(name)) {
-                    formatBuilder.append(String.format("%%%d$s", names.indexOf(name) + 1));
-                } else {
-                    formatBuilder.append(String.format("%%%d$s", argumentIndex++));
+                    if (temp.isEmpty()) {
+                        throw new IllegalArgumentException(String.format("{} block should not be empty"));
+                    }
+
+                    statements.add(new Variable(temp.toString()));
+                    temp.delete(0, temp.length());
                 }
-
-                names.add(name);
-
-                bracketEnd = i;
-                insideBracket = false;
-                continue;
-            } else if (!insideBracket && c == '}') {
-                throw new IllegalArgumentException("Illegal } character without opening bracket");
             }
         }
 
@@ -59,23 +54,62 @@ public class NewFormatter {
             throw new IllegalArgumentException("Missing }");
         }
 
-        formatBuilder.append(format.substring(bracketEnd + 1, format.length()));
+        if (!temp.isEmpty()) {
+            statements.add(new Literal(temp.toString()));
+        }
 
-        this.format = formatBuilder.toString();
+        return statements;
+    }
+
+    private List<Token> tokenize(String format) {
+        List<Token> tokens = new ArrayList<>();
+        for (int i = 0; i < format.length();) {
+            char c = format.charAt(i);
+            if (!(c == '{' || c == '}')) {
+                tokens.add(createLiteralToken(c));
+                i++;
+                continue;
+            }
+
+            if (i + 1 >= format.length()) {
+                tokens.add(createCurlyBracketToken(c));
+                i++;
+                continue;
+            }
+
+            char nextChar = format.charAt(i + 1);
+            if (nextChar == c) {
+                tokens.add(createLiteralToken(c));
+                i += 2;
+                continue;
+            }
+
+            tokens.add(createCurlyBracketToken(c));
+            i++;
+        }
+        return tokens;
+    }
+
+    private Token createLiteralToken(char c) {
+        return new Token(c, Type.LITERAL);
+    }
+
+    private Token createCurlyBracketToken(char c) {
+        if (c == '{') {
+            return new Token(c, Type.BRACKET_START);
+        }
+
+        return new Token(c, Type.BRACKET_END);
     }
 
     @NonNull
     public String format(Map<String, Object> values) {
-        Object[] args = new Object[names.size()];
-        for (int i = 0; i < args.length; i++) {
-            args[i] = values.get(names.get(i));
+        StringBuilder result = new StringBuilder();
+        for (Statement statement : statements) {
+            result.append(statement.evaluate(values));
         }
 
-        return String.format(format, args);
-    }
-
-    String getJavaFormat() {
-        return format;
+        return result.toString();
     }
 
 }

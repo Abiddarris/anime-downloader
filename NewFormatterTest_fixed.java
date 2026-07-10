@@ -21,7 +21,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: valid format with placeholders")
         void happyPathValidFormat() {
             NewFormatter formatter = new NewFormatter("Hello {name}, you are {age} years old");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -29,7 +29,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: repeated placeholder names")
         void happyPathRepeatedNames() {
             NewFormatter formatter = new NewFormatter("Hello {name}, hello {name} again");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -37,7 +37,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: no placeholders")
         void happyPathNoPlaceholders() {
             NewFormatter formatter = new NewFormatter("Just plain text");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -45,7 +45,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: empty format")
         void happyPathEmptyFormat() {
             NewFormatter formatter = new NewFormatter("");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -53,7 +53,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: placeholders at start, middle, end")
         void happyPathPlaceholderPositions() {
             NewFormatter formatter = new NewFormatter("{start} middle {end}");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -61,7 +61,7 @@ class NewFormatterTest {
         @DisplayName("Edge case: format with only braces and text")
         void edgeCaseBracesAndText() {
             NewFormatter formatter = new NewFormatter("a{b}c{d}e");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
     }
@@ -111,7 +111,7 @@ class NewFormatterTest {
         }
 
         @Test
-        @DisplayName("Error: Illegal } without opening bracket")
+        @DisplayName("Error: illegal } inside bracket")
         void errorIllegalBracketInsideBracket() {
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -129,7 +129,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: single escaped opening brace")
         void happyPathSingleEscapedOpeningBrace() {
             NewFormatter formatter = new NewFormatter("Text {{ with escaped brace");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -137,7 +137,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: single escaped closing brace")
         void happyPathSingleEscapedClosingBrace() {
             NewFormatter formatter = new NewFormatter("Text }} with escaped brace");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -145,7 +145,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: escaped braces mixed with placeholders")
         void happyPathEscapedBracesWithPlaceholders() {
             NewFormatter formatter = new NewFormatter("Hello {{name}}, you are {age} years old");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -153,7 +153,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: multiple consecutive escaped braces")
         void happyPathMultipleConsecutiveEscapedBraces() {
             NewFormatter formatter = new NewFormatter("Text {{ {{ and }} }}");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
 
@@ -161,7 +161,7 @@ class NewFormatterTest {
         @DisplayName("Happy path: escaping at start, middle, end")
         void happyPathEscapingPositions() {
             NewFormatter formatter = new NewFormatter("{{start}} middle {end}");
-
+            // Constructor should succeed without throwing exception
             assertTrue(formatter instanceof NewFormatter);
         }
     }
@@ -226,7 +226,7 @@ class NewFormatterTest {
         @DisplayName("Edge case: missing key results in null in output")
         void edgeCaseMissingKeyResultsInNull() {
             NewFormatter formatter = new NewFormatter("Hello {missing}");
-            Map<String, Object> values = new HashMap<>();
+            Map<String, Object> values = new HashMap<>(); // empty map
             String result = formatter.format(values);
             assertEquals("Hello null", result);
         }
@@ -360,7 +360,7 @@ class NewFormatterTest {
         }
 
         @Test
-        @DisplayName("Error: illegal } without opening bracket")
+        @DisplayName("Error: illegal } inside bracket")
         void errorIllegalBracketInsideBracket() {
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
@@ -372,6 +372,7 @@ class NewFormatterTest {
         @Test
         @DisplayName("Error: unmatched opening brace after escaping")
         void errorUnmatchedOpeningAfterEscaping() {
+            // Test case: {{name - this should fail because we have {{ (escaped {) followed by {name (unclosed bracket)
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> new NewFormatter("{{{name")
@@ -382,6 +383,7 @@ class NewFormatterTest {
         @Test
         @DisplayName("Error: unmatched closing brace after escaping")
         void errorUnmatchedClosingAfterEscaping() {
+            // Test case: name}} - this should fail because we have name followed by }} (escaped }) and an extra }
             IllegalArgumentException ex = assertThrows(
                     IllegalArgumentException.class,
                     () -> new NewFormatter("name}}}")
@@ -396,7 +398,7 @@ class NewFormatterTest {
                     IllegalArgumentException.class,
                     () -> new NewFormatter("{{{{{{name}}}}} {value} }}}}}")
             );
-            assertTrue(ex.getMessage().contains("Illegal } character without opening bracket"));
+            assertTrue(ex.getMessage().contains("Illegal { character inside bracket"));
         }
     }
 }
