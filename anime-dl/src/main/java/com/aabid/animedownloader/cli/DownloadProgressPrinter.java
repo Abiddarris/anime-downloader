@@ -3,17 +3,19 @@ package com.aabid.animedownloader.cli;
 import java.io.PrintWriter;
 
 import com.aabid.animedownloader.service.ytdlp.Progress;
+import com.aabid.animedownloader.service.ytdlp.ProgressListener;
 import com.aabid.animedownloader.service.ytdlp.Progress.State;
 import com.aabid.animedownloader.utils.ByteFormat;
 
-class ProgressPrinter {
+class DownloadProgressPrinter implements ProgressListener {
 
     private PrintWriter out;
 
-    public ProgressPrinter(PrintWriter out) {
+    public DownloadProgressPrinter(PrintWriter out) {
         this.out = out;
     }
 
+    @Override
     public void onProgressUpdate(Progress progress) {
         if (progress.getState() == State.FINISHED) {
             out.print("\r[Status] Download completed successfully.\033[K\n");

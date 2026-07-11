@@ -198,8 +198,8 @@ public class DownloadSubcommand implements Callable<Integer> {
             .setBuffersize(1024 * 16)
             .build();
 
-        ProgressPrinter printer = new ProgressPrinter(out);
-        ytDlpService.download(configuration, url, dest, printer::onProgressUpdate);
+        DownloadProgressPrinter printer = new DownloadProgressPrinter(out);
+        ytDlpService.download(configuration, url, dest, printer);
     }
 
     private String getOutputName(@NonNull NewFormatter formatter, @NonNull EpisodeInfo episodeInfo,
