@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.source.tryembed;
+package com.aabid.animedownloader.anime.tryembed;
 
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;

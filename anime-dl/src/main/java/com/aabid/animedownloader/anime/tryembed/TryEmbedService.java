@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.source.tryembed;
+package com.aabid.animedownloader.anime.tryembed;
 
 import java.io.IOException;
 import java.net.CookieManager;
@@ -8,10 +8,10 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.anime.AnimeService;
+import com.aabid.animedownloader.anime.AnimeServiceException;
+import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.source.AnimeService;
-import com.aabid.animedownloader.source.AnimeServiceException;
-import com.aabid.animedownloader.source.Episode;
 
 import okhttp3.CookieJar;
 import okhttp3.OkHttpClient;

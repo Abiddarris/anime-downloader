@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.source;
+package com.aabid.animedownloader.anime;
 
 import java.util.Collections;
 import java.util.List;

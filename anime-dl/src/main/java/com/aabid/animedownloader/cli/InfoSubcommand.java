@@ -13,15 +13,15 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.anime.AnimeService;
+import com.aabid.animedownloader.anime.AnimeServiceException;
+import com.aabid.animedownloader.anime.Episode;
+import com.aabid.animedownloader.anime.Quality;
+import com.aabid.animedownloader.anime.Server;
+import com.aabid.animedownloader.anime.ServerInfo;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
-import com.aabid.animedownloader.source.AnimeService;
-import com.aabid.animedownloader.source.AnimeServiceException;
-import com.aabid.animedownloader.source.Episode;
-import com.aabid.animedownloader.source.Quality;
-import com.aabid.animedownloader.source.Server;
-import com.aabid.animedownloader.source.ServerInfo;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;

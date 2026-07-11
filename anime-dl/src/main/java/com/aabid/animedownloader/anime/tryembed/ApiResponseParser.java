@@ -1,18 +1,18 @@
-package com.aabid.animedownloader.source.tryembed;
+package com.aabid.animedownloader.anime.tryembed;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.jspecify.annotations.NonNull;
 
-import com.aabid.animedownloader.source.AnimeNotFoundException;
-import com.aabid.animedownloader.source.EpisodeInfo;
-import com.aabid.animedownloader.source.Quality;
-import com.aabid.animedownloader.source.Server;
-import com.aabid.animedownloader.source.ServerException;
-import com.aabid.animedownloader.source.ServerInfo;
-import com.aabid.animedownloader.source.tryembed.ApiResponse.Provider;
-import com.aabid.animedownloader.source.tryembed.ApiResponse.StreamQuality;
+import com.aabid.animedownloader.anime.AnimeNotFoundException;
+import com.aabid.animedownloader.anime.EpisodeInfo;
+import com.aabid.animedownloader.anime.Quality;
+import com.aabid.animedownloader.anime.Server;
+import com.aabid.animedownloader.anime.ServerException;
+import com.aabid.animedownloader.anime.ServerInfo;
+import com.aabid.animedownloader.anime.tryembed.ApiResponse.Provider;
+import com.aabid.animedownloader.anime.tryembed.ApiResponse.StreamQuality;
 
 class ApiResponseParser {
 

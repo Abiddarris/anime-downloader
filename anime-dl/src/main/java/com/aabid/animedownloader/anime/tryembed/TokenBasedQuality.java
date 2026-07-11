@@ -1,8 +1,8 @@
-package com.aabid.animedownloader.source.tryembed;
+package com.aabid.animedownloader.anime.tryembed;
 
 import org.jspecify.annotations.NonNull;
 
-import com.aabid.animedownloader.source.Quality;
+import com.aabid.animedownloader.anime.Quality;
 
 class TokenBasedQuality extends Quality {
 
