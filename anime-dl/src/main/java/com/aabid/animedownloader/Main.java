@@ -7,12 +7,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.anime.AnimeService;
 import com.aabid.animedownloader.cli.AnimeDownloader;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.service.anilist.AnilistService;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.tryembed.TryEmbedService;

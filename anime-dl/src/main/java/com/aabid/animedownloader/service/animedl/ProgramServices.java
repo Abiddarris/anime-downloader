@@ -2,8 +2,8 @@ package com.aabid.animedownloader.service.animedl;
 
 import org.jspecify.annotations.NonNull;
 
-import com.aabid.animedownloader.anilist.AnilistService;
 import com.aabid.animedownloader.anime.AnimeService;
+import com.aabid.animedownloader.service.anilist.AnilistService;
 import com.aabid.animedownloader.service.ytdlp.YtDlpService;
 
 public class ProgramServices {

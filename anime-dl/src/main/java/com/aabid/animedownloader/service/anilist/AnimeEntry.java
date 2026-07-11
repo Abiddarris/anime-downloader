@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.anilist;
+package com.aabid.animedownloader.service.anilist;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
