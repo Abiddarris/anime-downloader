@@ -30,7 +30,7 @@ import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
 import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
-import com.aabid.animedownloader.service.ytdlp.YtDlpService;
+import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
@@ -89,7 +89,7 @@ public class DownloadSubcommand implements Callable<Integer> {
     private PrintWriter err;
 
     private AnimeService source;
-    private YtDlpService ytDlpService;
+    private YtDlp ytDlpService;
     private ProgramServicesFactory factory;
 
     public DownloadSubcommand(ProgramServicesFactory factory) {

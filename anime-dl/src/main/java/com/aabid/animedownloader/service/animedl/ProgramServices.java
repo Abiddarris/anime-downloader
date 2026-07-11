@@ -4,7 +4,7 @@ import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.anime.AnimeService;
 import com.aabid.animedownloader.service.anilist.AnilistService;
-import com.aabid.animedownloader.service.ytdlp.YtDlpService;
+import com.aabid.animedownloader.service.ytdlp.YtDlp;
 
 public class ProgramServices {
 
@@ -12,14 +12,14 @@ public class ProgramServices {
     private AnimeService source;
 
     @NonNull
-    private YtDlpService ytDlpService;
+    private YtDlp ytDlpService;
 
     @NonNull
     private AnilistService anilistService;
 
     public ProgramServices(
             @NonNull AnilistService anilistService, @NonNull AnimeService source,
-            @NonNull YtDlpService ytDlpService) {
+            @NonNull YtDlp ytDlpService) {
         this.anilistService = anilistService;
         this.source = source;
         this.ytDlpService = ytDlpService;
@@ -31,7 +31,7 @@ public class ProgramServices {
     }
 
     @NonNull
-    public YtDlpService getYtDlpService() {
+    public YtDlp getYtDlpService() {
         return ytDlpService;
     }
 

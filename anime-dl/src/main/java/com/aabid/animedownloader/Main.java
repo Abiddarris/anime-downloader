@@ -16,7 +16,7 @@ import com.aabid.animedownloader.service.anilist.AnilistService;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.tryembed.TryEmbedService;
-import com.aabid.animedownloader.service.ytdlp.YtDlpService;
+import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.utils.program.DefaultProgramInvoker;
 import com.aabid.animedownloader.utils.program.ProgramInvoker;
 
@@ -41,7 +41,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> service.shutdown()));
 
         ProgramInvoker invoker = new DefaultProgramInvoker("yt-dlp", service);
-        YtDlpService ytDlpService = new YtDlpService(invoker);
+        YtDlp ytDlpService = new YtDlp(invoker);
 
         OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(configuration.getConnectTimeout(), TimeUnit.MILLISECONDS)

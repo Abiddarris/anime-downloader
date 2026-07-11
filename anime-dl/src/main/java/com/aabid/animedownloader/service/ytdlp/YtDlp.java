@@ -16,16 +16,16 @@ import com.aabid.animedownloader.utils.program.Program;
 import com.aabid.animedownloader.utils.program.ProgramInvoker;
 import com.aabid.animedownloader.utils.program.StreamConsumer;
 
-public class YtDlpService {
+public class YtDlp {
 
-    private static final Logger log = LoggerFactory.getLogger(YtDlpService.class);
+    private static final Logger log = LoggerFactory.getLogger(YtDlp.class);
 
     private static final String PROGRESS_TEMPLATE = "Progress: %(progress.status)s||%(progress.downloaded_bytes)s||" +
         "%(progress.total_bytes_estimate)s||%(progress.total_bytes)s||%(progress.speed)s||" +
         "%(progress.fragment_index)s||%(progress.fragment_count)s";
     private final ProgramInvoker invoker;
 
-    public YtDlpService(@NonNull ProgramInvoker invoker) {
+    public YtDlp(@NonNull ProgramInvoker invoker) {
         Objects.requireNonNull(invoker, "invoker must not be null");
 
         this.invoker = invoker;
