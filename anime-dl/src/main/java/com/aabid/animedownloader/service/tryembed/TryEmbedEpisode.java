@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.anime.tryembed;
+package com.aabid.animedownloader.service.tryembed;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -16,8 +16,8 @@ import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
-import com.aabid.animedownloader.anime.tryembed.ApiResponse.Provider;
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

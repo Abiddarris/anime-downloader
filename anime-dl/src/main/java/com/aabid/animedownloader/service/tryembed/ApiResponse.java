@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.anime.tryembed;
+package com.aabid.animedownloader.service.tryembed;
 
 import java.util.List;
 
