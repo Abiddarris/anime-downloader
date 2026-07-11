@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.cli;
+package com.aabid.animedownloader.cli.mixin;
 
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 

@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.cli;
+package com.aabid.animedownloader.cli.mixin;
 
 import org.slf4j.LoggerFactory;
 

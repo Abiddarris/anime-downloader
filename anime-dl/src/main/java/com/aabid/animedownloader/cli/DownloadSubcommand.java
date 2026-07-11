@@ -23,6 +23,8 @@ import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
+import com.aabid.animedownloader.cli.mixin.LoggingMixIn;
+import com.aabid.animedownloader.cli.mixin.TimeoutMixIn;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;

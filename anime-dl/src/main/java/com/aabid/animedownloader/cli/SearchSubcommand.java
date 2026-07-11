@@ -11,6 +11,8 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.cli.mixin.LoggingMixIn;
+import com.aabid.animedownloader.cli.mixin.TimeoutMixIn;
 import com.aabid.animedownloader.service.anilist.AnilistService;
 import com.aabid.animedownloader.service.anilist.AnimeEntry;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
