@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.aabid.animedownloader.anime.AnimeService;
-import com.aabid.animedownloader.cli.AnimeDownloader;
+import com.aabid.animedownloader.cli.AnimeDlCommand;
 import com.aabid.animedownloader.cli.SubcommandFactory;
 import com.aabid.animedownloader.net.StaticUserAgentProvider;
 import com.aabid.animedownloader.net.UserAgentProvider;
@@ -30,7 +30,7 @@ public class Main {
 
     public static void main(String[] args) {
         SubcommandFactory factory = new SubcommandFactory(Main::newProgramServices);
-        CommandLine commandLine = new CommandLine(new AnimeDownloader(), factory);
+        CommandLine commandLine = new CommandLine(new AnimeDlCommand(), factory);
 
         int code = commandLine.execute(args);
         System.exit(code);

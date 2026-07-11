@@ -30,9 +30,9 @@ import picocli.CommandLine.Spec;
     mixinStandardHelpOptions = true,
     versionProvider = VersionProvider.class
 )
-public class SearchCommand implements Callable<Integer> {
+public class SearchSubcommand implements Callable<Integer> {
 
-    private static final Logger log = LoggerFactory.getLogger(SearchCommand.class);
+    private static final Logger log = LoggerFactory.getLogger(SearchSubcommand.class);
 
     @Spec
     private CommandSpec spec;
@@ -61,7 +61,7 @@ public class SearchCommand implements Callable<Integer> {
     @NonNull
     private final ProgramServicesFactory factory;
 
-    public SearchCommand(ProgramServicesFactory factory) {
+    public SearchSubcommand(ProgramServicesFactory factory) {
         this.factory = factory;
     }
 

@@ -22,8 +22,8 @@ public class SubcommandFactory implements IFactory {
             return cls.cast(new InfoSubcommand(factory));
         } else if (cls == DownloadSubcommand.class) {
             return cls.cast(new DownloadSubcommand(factory));
-        } else if (cls == SearchCommand.class) {
-            return cls.cast(new SearchCommand(factory));
+        } else if (cls == SearchSubcommand.class) {
+            return cls.cast(new SearchSubcommand(factory));
         }
 
         return CommandLine.defaultFactory().create(cls);
