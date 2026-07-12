@@ -111,19 +111,13 @@ public class DownloadSubcommand extends BaseSubcommand {
 
         Server server = null;
         if (serverId == null) {
-            for (ServerInfo info : episode.getServers()) {
-                try {
-                    server = episode.fetchServer(info);
-                    break;
-                } catch (IOException e) {
-                    log.warn(e.getMessage());
-                }
-            }
-
-            if (server == null) {
+            Optional<ServerInfo> info = episode.getReadyServer();
+            if (info.isEmpty()) {
                 err.println("No servers available");
                 return 1;
             }
+
+            server = episode.fetchServer(info.get());
         } else {
             Optional<ServerInfo> info = episode.findServerById(serverId);
             if (info.isEmpty()) {

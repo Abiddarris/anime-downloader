@@ -3,6 +3,7 @@ package com.aabid.animedownloader.service.tryembed;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
@@ -49,6 +50,9 @@ class TryEmbedEpisode extends Episode {
     @NonNull
     private List<ServerInfo> servers;
 
+    @Nullable
+    private ServerInfo readyServer;
+
     @NonNull
     private NonceManager nonceManager;
 
@@ -69,6 +73,7 @@ class TryEmbedEpisode extends Episode {
         ApiResponse response = fetchEpisodeData(null);
         this.info = ApiResponseParser.createEpisodeInfo(response);
         this.servers = ApiResponseParser.createServers(response.providers);
+        this.readyServer = ApiResponseParser.getReadyServer(this.servers, response);
 	}
 
     private String fetchCookiesAndRootNonce() throws IOException, AnimeServiceException {
@@ -219,6 +224,12 @@ class TryEmbedEpisode extends Episode {
     @NonNull
     public List<ServerInfo> getServers() {
         return Collections.unmodifiableList(servers);
+    }
+
+    @Override
+    @NonNull
+    public Optional<ServerInfo> getReadyServer() {
+        return Optional.of(readyServer);
     }
 
     @Override

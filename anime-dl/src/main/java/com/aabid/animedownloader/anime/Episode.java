@@ -15,6 +15,9 @@ public abstract class Episode {
     public abstract List<ServerInfo> getServers();
 
     @NonNull
+    public abstract Optional<ServerInfo> getReadyServer();
+
+    @NonNull
     public abstract Server fetchServer(ServerInfo info) throws IOException, AnimeServiceException;
 
     @NonNull

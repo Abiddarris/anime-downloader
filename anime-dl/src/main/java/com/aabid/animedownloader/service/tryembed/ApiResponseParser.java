@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.EpisodeInfo;
@@ -90,6 +91,18 @@ class ApiResponseParser {
         }
 
         return quality.name.substring(0, end + 1);
+    }
+
+    @Nullable
+    static ServerInfo getReadyServer(List<ServerInfo> servers, ApiResponse response) {
+        if (response.selectedProvider == null) {
+            return null;
+        }
+
+        return servers.stream()
+            .filter(server -> response.selectedProvider.id.equals(server.getId()))
+            .findFirst()
+            .orElse(null);
     }
 
 }
