@@ -22,6 +22,7 @@ import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
+import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
@@ -39,10 +40,13 @@ public class DownloadService {
 
     private @NonNull PrintWriter out;
 
+    private @NonNull UserAgentProvider userAgentProvider;
+
     public DownloadService(@NonNull ProgramServices services) {
         this.source = services.getSource();
         this.ytDlpService = services.getYtDlpService();
         this.out = services.getOut();
+        this.userAgentProvider = services.getUserAgentProvider();
     }
 
     public void download(DownloadRequest request) throws IOException, AnimeServiceException, YtDlpInvocationException,
@@ -110,7 +114,7 @@ public class DownloadService {
     private void invokeYtDlp(String url, Path dest) throws IOException, YtDlpInvocationException,
              InterruptedException, HttpException {
         List<String> headers = new ArrayList<>();
-        headers.add("User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0");
+        headers.add("User-Agent: " + userAgentProvider.getUserAgent());
         headers.add("Accept: */*");
         headers.add("Accept-Language: en-US,en;q=0.9");
         // headers.add("Accept-Encoding: gzip, deflate, br, zstd");

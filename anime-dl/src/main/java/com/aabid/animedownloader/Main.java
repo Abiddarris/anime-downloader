@@ -60,7 +60,8 @@ public class Main {
         AnilistService anilistService = new AnilistService(client, mapper);
         return new ProgramServices(
             anilistService, source, ytDlpService,
-            configuration.getOut(), configuration.getErr()
+            configuration.getOut(), configuration.getErr(),
+            userAgentProvider
         );
     }
 }
