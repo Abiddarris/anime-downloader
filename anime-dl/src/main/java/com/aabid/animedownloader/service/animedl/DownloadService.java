@@ -44,19 +44,20 @@ public class DownloadService {
         this.out = services.getOut();
     }
 
-    public void download(int episodeId, int animeId, String serverId,
-                         String qualityName, NewFormatter formatter,
-                         boolean simulate) throws IOException, AnimeServiceException, YtDlpInvocationException,
+    public void download(DownloadRequest request) throws IOException, AnimeServiceException, YtDlpInvocationException,
                                                   InterruptedException, HttpException {
-        out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
+        out.printf(
+            "Fetching episode %d for anime %d (AniList ID)%n",
+            request.getEpisodeId(), request.getAnimeId()
+        );
 
-        Episode episode = source.queryEpisode(animeId, episodeId);
+        Episode episode = source.queryEpisode(request.getAnimeId(), request.getEpisodeId());
         EpisodeInfo episodeInfo = episode.getEpisodeInfo();
 
-        out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), episodeId);
+        out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), request.getEpisodeId());
 
         Server server = null;
-        if (serverId == null) {
+        if (request.getServerId() == null) {
             Optional<ServerInfo> info = episode.getReadyServer();
             if (info.isEmpty()) {
                 throw new DownloadException("No servers available");
@@ -64,15 +65,15 @@ public class DownloadService {
 
             server = episode.fetchServer(info.get());
         } else {
-            Optional<ServerInfo> info = episode.findServerById(serverId);
+            Optional<ServerInfo> info = episode.findServerById(request.getServerId());
             if (info.isEmpty()) {
-                throw new DownloadException(String.format("Server '%s' not found", serverId));
+                throw new DownloadException(String.format("Server '%s' not found", request.getServerId()));
             }
 
             server = episode.fetchServer(info.get());
         }
 
-        Optional<Quality> qualityOpt = getQuality(server, qualityName);
+        Optional<Quality> qualityOpt = getQuality(server, request.getQualityName());
         if (qualityOpt.isEmpty()) {
             throw new DownloadException("No stream available for the selected quality");
         }
@@ -82,11 +83,11 @@ public class DownloadService {
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
         String link = episode.resolveQuality(quality);
-        String output = getOutputName(formatter, episodeInfo, server.getInfo(), quality);
+        String output = getOutputName(request.getFormatter(), episodeInfo, server.getInfo(), quality);
 
         out.println("Passing stream link to yt-dlp for download");
 
-        if (!simulate) {
+        if (!request.isSimulate()) {
             invokeYtDlp(link, Path.of(output));
         }
     }

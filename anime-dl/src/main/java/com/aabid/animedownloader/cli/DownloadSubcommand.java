@@ -4,6 +4,7 @@ import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.cli.converter.OutputFormatterConverter;
 import com.aabid.animedownloader.service.animedl.DownloadException;
+import com.aabid.animedownloader.service.animedl.DownloadRequest;
 import com.aabid.animedownloader.service.animedl.DownloadService;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
@@ -55,9 +56,16 @@ public class DownloadSubcommand extends BaseSubcommand {
     protected int start(ProgramServices services) throws Exception {
         DownloadService service = new DownloadService(services);
         try {
-            service.download(
-                episodeId, animeId, serverId, quality, formatter, simulate
-            );
+            DownloadRequest request = new DownloadRequest.Builder()
+                .setEpisodeId(episodeId)
+                .setAnimeId(animeId)
+                .setServerId(serverId)
+                .setQualityName(quality)
+                .setFormatter(formatter)
+                .setSimulate(simulate)
+                .build();
+            service.download(request);
+
             return 0;
         } catch (DownloadException e) {
             printError(e.getMessage());
