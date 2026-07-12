@@ -1,35 +1,27 @@
 package com.aabid.animedownloader.cli;
 
-import static picocli.CommandLine.Help.Ansi.AUTO;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.AnimeService;
 import com.aabid.animedownloader.anime.AnimeServiceException;
 import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
-import com.aabid.animedownloader.cli.mixin.LoggingMixIn;
-import com.aabid.animedownloader.cli.mixin.TimeoutMixIn;
-import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Mixin;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
 
 @Command(
     name = "info",
@@ -37,18 +29,9 @@ import picocli.CommandLine.Spec;
     mixinStandardHelpOptions = true,
     versionProvider = VersionProvider.class
 )
-public class InfoSubcommand implements Callable<Integer> {
+public class InfoSubcommand extends BaseSubcommand {
 
     private static final Logger log = LoggerFactory.getLogger(InfoSubcommand.class);
-
-    @Spec
-    private CommandSpec spec;
-
-    @Mixin
-    private LoggingMixIn loggingMixIn;
-
-    @Mixin
-    private TimeoutMixIn timeoutMixIn;
 
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
@@ -56,39 +39,33 @@ public class InfoSubcommand implements Callable<Integer> {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    private AnimeService source;
-
-    @NonNull
-    private ProgramServicesFactory factory;
-
     public InfoSubcommand(@NonNull ProgramServicesFactory factory) {
-        this.factory = factory;
+        super(factory);
     }
 
     @Override
-    public Integer call() throws Exception {
-        loggingMixIn.configureLogging();
-
-        ProgramConfiguration.Builder builder = new ProgramConfiguration.Builder();
-        timeoutMixIn.applyConfiguration(builder);
-
-        ProgramServices services = factory.apply(builder.build());
-        source = services.getSource();
-
-        PrintWriter out = spec.commandLine().getOut();
-        PrintWriter err = spec.commandLine().getOut();
-
+    protected int start(ProgramServices services) throws Exception {
         try {
-            return printEpisodeInfo(out, err);
-        } catch (Exception e) {
-            err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
-            log.debug("Detailed Stacktrace: ", e);
-            return 1;
+            return printEpisodeInfo(services);
+        } catch (AnimeNotFoundException e) {
+            printError(e.getMessage());
+            printStackTrace(e);
+        } catch (AnimeServiceException e) {
+            printError(
+                "Failed to fetch episode information. " +
+                "Use --verbose for more details or try again later."
+            );
+            printStackTrace(e);
         }
+
+        return -1;
     }
 
-    private int printEpisodeInfo(PrintWriter out, PrintWriter err) throws IOException, AnimeServiceException {
-        Episode episode = source.queryEpisode(animeId, episodeId);
+    private int printEpisodeInfo(ProgramServices services) throws IOException, AnimeServiceException {
+        PrintWriter out = services.getOut();
+        AnimeService anime = services.getSource();
+
+        Episode episode = anime.queryEpisode(animeId, episodeId);
         List<Server> servers = episode.getServers()
                 .stream()
                 .map(server -> fetchServer(episode, server))

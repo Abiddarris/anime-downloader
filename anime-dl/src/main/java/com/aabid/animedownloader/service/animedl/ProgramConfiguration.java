@@ -1,6 +1,7 @@
 package com.aabid.animedownloader.service.animedl;
 
 import org.jspecify.annotations.NonNull;
+import java.io.PrintWriter;
 
 /**
  * Configuration class for the Anime-Downloader program.
@@ -11,11 +12,15 @@ public final class ProgramConfiguration {
     private final int connectTimeout;
     private final int readTimeout;
     private final int writeTimeout;
+    private final PrintWriter out;
+    private final PrintWriter err;
 
     private ProgramConfiguration(Builder builder) {
         this.connectTimeout = builder.connectTimeout;
         this.readTimeout = builder.readTimeout;
         this.writeTimeout = builder.writeTimeout;
+        this.out = builder.out;
+        this.err = builder.err;
     }
 
     /**
@@ -46,6 +51,24 @@ public final class ProgramConfiguration {
     }
 
     /**
+     * Gets the output writer.
+     *
+     * @return the output writer
+     */
+    public PrintWriter getOut() {
+        return out;
+    }
+
+    /**
+     * Gets the error writer.
+     *
+     * @return the error writer
+     */
+    public PrintWriter getErr() {
+        return err;
+    }
+
+    /**
      * Builder class for ProgramConfiguration.
      * Provides a fluent interface for creating configuration instances.
      */
@@ -58,6 +81,8 @@ public final class ProgramConfiguration {
         private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
         private int readTimeout = DEFAULT_READ_TIMEOUT;
         private int writeTimeout = DEFAULT_WRITE_TIMEOUT;
+        private PrintWriter out = new PrintWriter(System.out, true);
+        private PrintWriter err = new PrintWriter(System.err, true);
 
         public Builder() {
         }
@@ -104,6 +129,30 @@ public final class ProgramConfiguration {
                 throw new IllegalArgumentException("writeTimeout cannot be negative");
             }
             this.writeTimeout = writeTimeout;
+            return this;
+        }
+
+        /**
+         * Sets the output writer.
+         *
+         * @param out the output writer
+         * @return this builder
+         */
+        @NonNull
+        public Builder out(PrintWriter out) {
+            this.out = out;
+            return this;
+        }
+
+        /**
+         * Sets the error writer.
+         *
+         * @param err the error writer
+         * @return this builder
+         */
+        @NonNull
+        public Builder err(PrintWriter err) {
+            this.err = err;
             return this;
         }
 

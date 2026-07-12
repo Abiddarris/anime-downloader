@@ -24,6 +24,10 @@ import okhttp3.OkHttpClient;
 import picocli.CommandLine;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Main entry point for the Anime-Downloader application.
+ * Initializes services and handles command line execution.
+ */
 public class Main {
 
     private static final String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0";
@@ -54,6 +58,9 @@ public class Main {
         AnimeService source = new TryEmbedService(client, mapper, userAgentProvider);
 
         AnilistService anilistService = new AnilistService(client, mapper);
-        return new ProgramServices(anilistService, source, ytDlpService);
+        return new ProgramServices(
+            anilistService, source, ytDlpService,
+            configuration.getOut(), configuration.getErr()
+        );
     }
 }

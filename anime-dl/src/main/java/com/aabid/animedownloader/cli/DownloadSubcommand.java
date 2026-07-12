@@ -1,7 +1,5 @@
 package com.aabid.animedownloader.cli;
 
-import static picocli.CommandLine.Help.Ansi.AUTO;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -10,39 +8,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.AnimeService;
 import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
+import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.anime.ServerInfo;
 import com.aabid.animedownloader.cli.converter.OutputFormatterConverter;
-import com.aabid.animedownloader.cli.mixin.LoggingMixIn;
-import com.aabid.animedownloader.cli.mixin.TimeoutMixIn;
-import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
-import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
 import com.aabid.animedownloader.service.ytdlp.YtDlp;
+import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help.Visibility;
-import picocli.CommandLine.Mixin;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import picocli.CommandLine.Spec;
 
 @Command(
     name = "download",
@@ -50,18 +43,9 @@ import picocli.CommandLine.Spec;
     mixinStandardHelpOptions = true,
     versionProvider = VersionProvider.class
 )
-public class DownloadSubcommand implements Callable<Integer> {
+public class DownloadSubcommand extends BaseSubcommand {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadSubcommand.class);
-
-    @Spec
-    private CommandSpec spec;
-
-    @Mixin
-    private LoggingMixIn loggingMixIn;
-
-    @Mixin
-    private TimeoutMixIn timeoutMixIn;
 
     @Option(names = {"-s", "--server"}, description = "ID of server to download from")
     private String serverId;
@@ -88,43 +72,38 @@ public class DownloadSubcommand implements Callable<Integer> {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    private PrintWriter out;
-    private PrintWriter err;
-
     private AnimeService source;
     private YtDlp ytDlpService;
-    private ProgramServicesFactory factory;
 
     public DownloadSubcommand(ProgramServicesFactory factory) {
-        this.factory = factory;
+        super(factory);
     }
 
     @Override
-    public Integer call() throws Exception {
-        loggingMixIn.configureLogging();
-
-        ProgramConfiguration.Builder builder = new ProgramConfiguration.Builder();
-        timeoutMixIn.applyConfiguration(builder);
-
-        ProgramServices services = factory.apply(builder.build());
+    protected int start(ProgramServices services) throws Exception {
         source = services.getSource();
         ytDlpService = services.getYtDlpService();
 
-        out = spec.commandLine().getOut();
-        err = spec.commandLine().getErr();
-
         try {
-            return download();
-        } catch (Exception e) {
-            err.println(AUTO.string("@|red,bold " + e.toString() + "|@"));
-            log.debug("Detailed Stacktrace: ", e);
-            return 1;
+            return download(services);
+        } catch (AnimeNotFoundException e) {
+            printError(e.getMessage());
+            printStackTrace(e);
+        } catch (ServerException e) {
+            printError(
+                "Server unavailable or returned an error. " +
+                "Use --verbose for more details or try switching to another server using the --server flag"
+            );
+            printStackTrace(e);
         }
+        return -1;
     }
 
-    private int download() throws Exception {
-        out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
+    private int download(ProgramServices services) throws Exception {
+        PrintWriter out = services.getOut();
+        PrintWriter err = services.getOut();
 
+        out.printf("Fetching episode %d for anime %d (AniList ID)%n", episodeId, animeId);
         Episode episode = source.queryEpisode(animeId, episodeId);
         EpisodeInfo episodeInfo = episode.getEpisodeInfo();
 
@@ -198,7 +177,7 @@ public class DownloadSubcommand implements Callable<Integer> {
             .setBuffersize(1024 * 16)
             .build();
 
-        DownloadProgressPrinter printer = new DownloadProgressPrinter(out);
+        DownloadProgressPrinter printer = new DownloadProgressPrinter(getOut());
         ytDlpService.download(configuration, url, dest, printer);
     }
 
