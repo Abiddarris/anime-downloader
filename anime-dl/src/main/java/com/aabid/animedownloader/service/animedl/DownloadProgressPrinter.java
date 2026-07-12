@@ -1,4 +1,4 @@
-package com.aabid.animedownloader.cli;
+package com.aabid.animedownloader.service.animedl;
 
 import java.io.PrintWriter;
 
