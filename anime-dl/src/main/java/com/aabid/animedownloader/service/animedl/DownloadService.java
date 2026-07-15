@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +19,7 @@ import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
+import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.anime.ServerInfo;
 import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
@@ -61,14 +60,15 @@ public class DownloadService {
 
         out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), request.getEpisodeId());
 
-        Server server = getServer(episode, request.getServerId());
-        Quality quality = getQuality(server, request.getQualityName());
+        Selection selection =  select(episode, request.getServerId(), request.getQualityName());
+        ServerInfo serverInfo = selection.getServerInfo();
+        Quality quality = selection.getQuality();
 
         log.debug("Using quality: {}", quality);
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
         String link = episode.resolveQuality(quality);
-        String output = getOutputName(request.getFormatter(), episodeInfo, server.getInfo(), quality);
+        String output = getOutputName(request.getFormatter(), episodeInfo, serverInfo, quality);
 
         out.println("Passing stream link to yt-dlp for download");
 
@@ -77,38 +77,45 @@ public class DownloadService {
         }
     }
 
-    private static Server getServer(Episode episode, String serverId) throws IOException, AnimeServiceException {
+    private static Selection select(@NonNull Episode episode, @NonNull String serverId, @NonNull String qualityName)
+            throws IOException, AnimeServiceException {
+        List<ServerInfo> selectedServer = getSelectedServer(episode, serverId);
+        for (ServerInfo serverInfo : selectedServer) {
+            try {
+                Server server = episode.fetchServer(serverInfo);
+                Optional<Quality> quality;
+                if (qualityName != null) {
+                    quality = server.getQuality(qualityName);
+                } else {
+                    log.debug("No --quality specified, using first available quality");
+
+                    quality = server.getQualities()
+                        .stream()
+                        .findFirst();
+                }
+
+                if (quality.isPresent()) {
+                    return new Selection(serverInfo, quality.get());
+                }
+            } catch (ServerException e) {
+                log.warn("Fail to fetch {} server", serverInfo.getId());
+            }
+        }
+
+        throw new DownloadException("No stream available for the selected quality");
+    }
+
+    private static List<ServerInfo> getSelectedServer(Episode episode, String serverId) throws IOException, AnimeServiceException {
         if (serverId != null) {
             Optional<ServerInfo> info = episode.findServerById(serverId);
             if (info.isEmpty()) {
                 throw new DownloadException(String.format("Server '%s' not found", serverId));
             }
 
-            return episode.fetchServer(info.get());
+            return List.of(info.get());
         }
 
-        Optional<ServerInfo> info = episode.getReadyServer();
-        if (info.isEmpty()) {
-            throw new DownloadException("No servers available");
-        }
-
-        return episode.fetchServer(info.get());
-    }
-
-    private static Quality getQuality(@NonNull Server server, @Nullable String qualityName) {
-        Supplier<DownloadException> exception =
-            () -> new DownloadException("No stream available for the selected quality");
-        if (qualityName != null) {
-            return server.getQuality(qualityName)
-                    .orElseThrow(exception);
-        }
-
-        log.debug("No --quality specified, using first available quality");
-
-        return server.getQualities()
-                .stream()
-                .findFirst()
-                .orElseThrow(exception);
+        return episode.getServers();
     }
 
     private void invokeYtDlp(String url, Path dest) throws IOException, YtDlpInvocationException,
