@@ -43,6 +43,7 @@ public class YtDlp {
 
         ArgumentBuilder builder = new ArgumentBuilder()
             .addOption("-o", out.getFileName().toString())
+            .addBooleanOptions("--abort-on-unavailable-fragments")
             .setPositionalArguments(link);
 
         applyConfiguration(configuration, builder);
