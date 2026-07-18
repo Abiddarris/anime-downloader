@@ -11,7 +11,6 @@ import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Help.Visibility;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -28,11 +27,10 @@ public class DownloadSubcommand extends BaseSubcommand {
 
     @Option(
         names = {"-o", "--output"},
-        description = "Output file name",
+        description = "Output file name (default: ${DEFAULT-VALUE})",
         defaultValue = "{anime_title} #{episode} [{id}].{ext}",
         converter = OutputFormatterConverter.class,
-        paramLabel = "output",
-        showDefaultValue = Visibility.ALWAYS
+        paramLabel = "output"
     )
     private NewFormatter formatter;
 

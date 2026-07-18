@@ -20,10 +20,12 @@ import com.aabid.animedownloader.service.animedl.ProgramConfiguration.Builder;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Spec;
 
+@Command(usageHelpAutoWidth = true)
 abstract class BaseSubcommand implements Callable<Integer> {
 
     private static final Logger log = LoggerFactory.getLogger(BaseSubcommand.class);

@@ -10,6 +10,7 @@ import picocli.CommandLine.Spec;
     name = "anime-downloader",
     description = "Download anime from tryembed.us.cc",
     mixinStandardHelpOptions = true,
+    usageHelpAutoWidth = true,
     subcommands = {DownloadSubcommand.class, InfoSubcommand.class, SearchSubcommand.class},
     versionProvider = VersionProvider.class
 )

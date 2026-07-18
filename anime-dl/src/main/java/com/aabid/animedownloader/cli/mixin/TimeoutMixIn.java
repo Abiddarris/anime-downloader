@@ -3,7 +3,6 @@ package com.aabid.animedownloader.cli.mixin;
 import com.aabid.animedownloader.service.animedl.ProgramConfiguration;
 
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Help.Visibility;
 
 /**
  * Mixin class for configuring network timeout values via command-line options.
@@ -85,8 +84,8 @@ public class TimeoutMixIn {
     @Option(
         names = { "--connect-timeout" },
         defaultValue = "10000",
-        showDefaultValue = Visibility.ALWAYS,
-        description = "Connection timeout in milliseconds (0 for no timeout)"
+        paramLabel = "mills",
+        description = "Connection timeout in milliseconds. 0 for no timeout (default: ${DEFAULT-VALUE})"
     )
     public void setConnectTimeout(int connectTimeout) {
         if (connectTimeout < 0) {
@@ -104,8 +103,8 @@ public class TimeoutMixIn {
     @Option(
         names = { "--read-timeout" },
         defaultValue = "30000",
-        showDefaultValue = Visibility.ALWAYS,
-        description = "Read timeout in milliseconds (0 for no timeout)"
+        paramLabel = "mills",
+        description = "Read timeout in milliseconds. 0 for no timeout (default: ${DEFAULT-VALUE})"
     )
     public void setReadTimeout(int readTimeout) {
         if (readTimeout < 0) {
@@ -123,8 +122,8 @@ public class TimeoutMixIn {
     @Option(
         names = {"--write-timeout" },
         defaultValue = "10000",
-        showDefaultValue = Visibility.ALWAYS,
-        description = "Write timeout in milliseconds (0 for no timeout)"
+        paramLabel = "mills",
+        description = "Write timeout in milliseconds. 0 for no timeout (default: ${DEFAULT-VALUE})"
     )
     public void setWriteTimeout(int writeTimeout) {
         if (writeTimeout < 0) {
