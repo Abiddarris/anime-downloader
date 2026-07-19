@@ -75,7 +75,7 @@ public class DownloadService {
 
         out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), request.getEpisodeId());
 
-        Selection selection =  select(episode, request.getServerId(), request.getQualityName());
+        Selection selection =  select(episode, request.getServerSpec(), request.getQualityName());
         ServerInfo serverInfo = selection.getServerInfo();
         Quality quality = selection.getQuality();
 
@@ -92,9 +92,9 @@ public class DownloadService {
         }
     }
 
-    private static Selection select(@NonNull Episode episode, @NonNull String serverId, @NonNull String qualityName)
-            throws IOException, AnimeServiceException {
-        List<ServerInfo> selectedServer = getSelectedServer(episode, serverId);
+    private static Selection select(@NonNull Episode episode, @NonNull List<ServerSpec> specs,
+            @NonNull String qualityName) throws IOException, AnimeServiceException {
+        List<ServerInfo> selectedServer = getCandidateServer(episode, specs);
         for (ServerInfo serverInfo : selectedServer) {
             try {
                 Server server = episode.fetchServer(serverInfo);
@@ -120,17 +120,34 @@ public class DownloadService {
         throw new DownloadException("No stream available for the selected quality");
     }
 
-    private static List<ServerInfo> getSelectedServer(Episode episode, String serverId) throws IOException, AnimeServiceException {
-        if (serverId != null) {
-            Optional<ServerInfo> info = episode.findServerById(serverId);
-            if (info.isEmpty()) {
-                throw new DownloadException(String.format("Server '%s' not found", serverId));
+    private static List<ServerInfo> getCandidateServer(Episode episode,
+            @NonNull List<ServerSpec> specs) throws IOException, AnimeServiceException {
+        List<ServerInfo> availableServers = new ArrayList<>(episode.getServers());
+        List<ServerInfo> candidateServers = new ArrayList<>();
+        for (ServerSpec serverSpec : specs) {
+            if (serverSpec.equals(ServerSpec.NONE)) {
+                break;
             }
 
-            return List.of(info.get());
+            if (serverSpec.equals(ServerSpec.ANY)) {
+                candidateServers.addAll(availableServers);
+                break;
+            }
+
+            Optional<ServerInfo> info = episode.findServerById(serverSpec.getName());
+            if (info.isEmpty()) {
+                throw new DownloadException(String.format("Server '%s' not found", serverSpec));
+            }
+
+            ServerInfo serverInfo = info.get();
+            availableServers.remove(serverInfo);
+            candidateServers.add(serverInfo);
         }
 
-        return episode.getServers();
+        log.debug("Server spec: {}", specs);
+        log.debug("Candidate server: {}", candidateServers);
+
+        return candidateServers;
     }
 
     private void invokeYtDlp(String url, Path dest) throws IOException, YtDlpInvocationException,

@@ -15,16 +15,24 @@
  */
 package com.aabid.animedownloader.service.animedl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import org.jspecify.annotations.NonNull;
+
 import com.aabid.animedownloader.utils.format.NewFormatter;
+import com.google.common.collect.Lists;
 
 /**
  * Request object for downloading anime episodes.
  * Encapsulates all parameters needed for the download process.
  */
 public class DownloadRequest {
+
     private final int episodeId;
     private final int animeId;
-    private final String serverId;
+    private final @NonNull List<ServerSpec> serverSpec;
     private final String qualityName;
     private final NewFormatter formatter;
     private final boolean simulate;
@@ -32,7 +40,7 @@ public class DownloadRequest {
     private DownloadRequest(Builder builder) {
         this.episodeId = builder.episodeId;
         this.animeId = builder.animeId;
-        this.serverId = builder.serverId;
+        this.serverSpec = builder.serverId;
         this.qualityName = builder.qualityName;
         this.formatter = builder.formatter;
         this.simulate = builder.simulate;
@@ -46,8 +54,8 @@ public class DownloadRequest {
         return animeId;
     }
 
-    public String getServerId() {
-        return serverId;
+    public @NonNull List<ServerSpec> getServerSpec() {
+        return serverSpec;
     }
 
     public String getQualityName() {
@@ -69,7 +77,7 @@ public class DownloadRequest {
 
         private int episodeId;
         private int animeId;
-        private String serverId;
+        private @NonNull List<ServerSpec> serverId = Lists.newArrayList(ServerSpec.ANY);
         private String qualityName;
         private NewFormatter formatter;
         private boolean simulate;
@@ -84,8 +92,26 @@ public class DownloadRequest {
             return this;
         }
 
-        public Builder setServerId(String serverId) {
-            this.serverId = serverId;
+        public Builder setServerId(@NonNull List<ServerSpec> specs) {
+            Objects.requireNonNull(specs, "specs can not be null");
+
+            this.serverId = new ArrayList<>(specs);
+            if (this.serverId.isEmpty()) {
+                this.serverId.add(ServerSpec.ANY);
+                return this;
+            }
+
+            int lastIndex = this.serverId.size() - 1;
+            if ((this.serverId.indexOf(ServerSpec.ANY) > 0 && this.serverId.indexOf(ServerSpec.ANY) != lastIndex) ||
+                (this.serverId.indexOf(ServerSpec.NONE) > 0 && this.serverId.indexOf(ServerSpec.NONE) != lastIndex) ) {
+                throw new IllegalArgumentException("ANY and NONE can only appear on the last element");
+            }
+
+            ServerSpec spec = this.serverId.get(lastIndex);
+            if (!spec.equals(ServerSpec.ANY) && !spec.equals(ServerSpec.NONE)) {
+                this.serverId.add(ServerSpec.NONE);
+            }
+
             return this;
         }
 
