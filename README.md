@@ -22,22 +22,22 @@ Distributed as a pre-compiled application bundle via Gradle.
 
 1. Go to the [Releases](../../releases) page
 2. Download the archive for your platform:
-   - `anime-dl-0.x.x.zip`
-   - `anime-dl-0.x.x.tar`
+   - `anime-dl-0.4.1.zip`
+   - `anime-dl-0.4.1.tar`
 3. Extract the archive:
 
 ```bash
 # ZIP
-unzip anime-dl-0.x.x.zip
+unzip anime-dl-0.4.1.zip
 
 # TAR
-tar -xvf anime-dl-0.x.x.tar
+tar -xvf anime-dl-0.4.1.tar
 ```
 
 4. Run the binary:
 
 ```bash
-cd anime-dl-0.x.x/bin
+cd anime-dl-0.4.1/bin
 ./anime-dl --help
 ```
 
@@ -70,24 +70,23 @@ Commands:
 Find an anime's AniList ID by name or keyword — the usual starting point before `info` or `download`.
 
 ```
-Usage: anime-downloader search [-hvV] [--connect-timeout=<connectTimeout>]
-                               [-p=<page>] [--read-timeout=<readTimeout>]
-                               [--write-timeout=<writeTimeout>] <keyword>
+Usage: anime-downloader search [-hvV] [--connect-timeout=mills] [-p=<page>]
+                               [--read-timeout=mills] [--write-timeout=mills]
+                               <keyword>
 Search for anime on AniList by name or keyword.
-      <keyword>       The name or keyword of the anime you want to find.
-      --connect-timeout=<connectTimeout>
-                      Connection timeout in milliseconds (0 for no timeout)
-                        Default: 10000
-  -h, --help          Show this help message and exit.
-  -p, --page=<page>   The page number of search results to display (default: 1).
-      --read-timeout=<readTimeout>
-                      Read timeout in milliseconds (0 for no timeout)
-                        Default: 30000
-  -v, --verbose       Enable debug logging
-  -V, --version       Print version information and exit.
-      --write-timeout=<writeTimeout>
-                      Write timeout in milliseconds (0 for no timeout)
-                        Default: 10000
+      <keyword>              The name or keyword of the anime you want to find.
+      --connect-timeout=mills
+                             Connection timeout in milliseconds. 0 for no
+                               timeout (default: 10000)
+  -h, --help                 Show this help message and exit.
+  -p, --page=<page>          The page number of search results to display
+                               (default: 1).
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
+                               (default: 30000)
+  -v, --verbose              Enable debug logging
+  -V, --version              Print version information and exit.
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
+                               (default: 10000)
 ```
 
 ### info
@@ -95,24 +94,22 @@ Search for anime on AniList by name or keyword.
 Fetch and display available servers and qualities for an episode without downloading.
 
 ```
-Usage: anime-downloader info [-hvV] [--connect-timeout=<connectTimeout>]
-                             [--read-timeout=<readTimeout>]
-                             [--write-timeout=<writeTimeout>] <animeId> <episodeId>
+Usage: anime-downloader info [-hvV] [--connect-timeout=mills]
+                             [--read-timeout=mills] [--write-timeout=mills]
+                             <animeId> <episodeId>
 Fetch and display available servers and qualities for an episode
-      <animeId>     AniList anime ID
-      <episodeId>   Episode number
-      --connect-timeout=<connectTimeout>
-                    Connection timeout in milliseconds (0 for no timeout)
-                      Default: 10000
-  -h, --help        Show this help message and exit.
-      --read-timeout=<readTimeout>
-                    Read timeout in milliseconds (0 for no timeout)
-                      Default: 30000
-  -v, --verbose     Enable debug logging
-  -V, --version     Print version information and exit.
-      --write-timeout=<writeTimeout>
-                    Write timeout in milliseconds (0 for no timeout)
-                      Default: 10000
+      <animeId>              AniList anime ID
+      <episodeId>            Episode number
+      --connect-timeout=mills
+                             Connection timeout in milliseconds. 0 for no
+                               timeout (default: 10000)
+  -h, --help                 Show this help message and exit.
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
+                               (default: 30000)
+  -v, --verbose              Enable debug logging
+  -V, --version              Print version information and exit.
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
+                               (default: 10000)
 ```
 
 ### download
@@ -120,30 +117,28 @@ Fetch and display available servers and qualities for an episode
 Download an episode to local storage.
 
 ```
-Usage: anime-downloader download [-hSvV] [--connect-timeout=<connectTimeout>]
-                                 [-o=output] [-Q=<quality>]
-                                 [--read-timeout=<readTimeout>] [-s=<serverId>]
-                                 [--write-timeout=<writeTimeout>] <animeId> <episodeId>
+Usage: anime-downloader download [-hSvV] [--connect-timeout=mills] [-o=output]
+                                 [-Q=<quality>] [--read-timeout=mills]
+                                 [-s=<serverId>] [--write-timeout=mills]
+                                 <animeId> <episodeId>
 Download an anime episode from tryembed.us.cc
-      <animeId>             AniList anime ID
-      <episodeId>           Episode number
-      --connect-timeout=<connectTimeout>
-                            Connection timeout in milliseconds (0 for no timeout)
-                              Default: 10000
-  -h, --help                Show this help message and exit.
-  -o, --output=output       Output file name
-                              Default: {anime_title} #{episode} [{id}].{ext}
-  -Q, --quality=<quality>   Video resolution (e.g. 1080p, 720p, 480p)
-      --read-timeout=<readTimeout>
-                            Read timeout in milliseconds (0 for no timeout)
-                              Default: 30000
-  -s, --server=<serverId>   ID of server to download from
-  -S, --simulate            Do not download the video
-  -v, --verbose             Enable debug logging
-  -V, --version             Print version information and exit.
-      --write-timeout=<writeTimeout>
-                            Write timeout in milliseconds (0 for no timeout)
-                              Default: 10000
+      <animeId>              AniList anime ID
+      <episodeId>            Episode number
+      --connect-timeout=mills
+                             Connection timeout in milliseconds. 0 for no
+                               timeout (default: 10000)
+  -h, --help                 Show this help message and exit.
+  -o, --output=output        Output file name (default: {anime_title} #
+                               {episode} [{id}].{ext})
+  -Q, --quality=<quality>    Video resolution (e.g. 1080p, 720p, 480p)
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
+                               (default: 30000)
+  -s, --server=<serverId>    ID of server to download from
+  -S, --simulate             Do not download the video
+  -v, --verbose              Enable debug logging
+  -V, --version              Print version information and exit.
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
+                               (default: 10000)
 ```
 
 #### Output filename formatting
