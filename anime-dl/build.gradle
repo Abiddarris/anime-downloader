@@ -28,8 +28,8 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:5.4.0"
     implementation "com.squareup.okhttp3:okhttp-urlconnection:5.4.0"
     implementation "com.squareup.okhttp3:logging-interceptor:5.4.0"
-    implementation "tools.jackson.core:jackson-core:3.2.0"
-    implementation "tools.jackson.core:jackson-databind:3.2.0"
+    implementation "tools.jackson.core:jackson-core:3.2.1"
+    implementation "tools.jackson.core:jackson-databind:3.2.1"
     implementation "info.picocli:picocli:4.7.7"
     implementation "org.slf4j:slf4j-api:2.0.18"
     implementation 'ch.qos.logback:logback-classic:1.5.34'
