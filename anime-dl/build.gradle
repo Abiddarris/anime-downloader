@@ -8,6 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'com.github.jk1.dependency-license-report' version '3.1.4'
 }
 
 version = "0.4.1"
