@@ -1,3 +1,17 @@
+
+## [0.4.1] - 2026-07-19
+
+### 🐛 Bug Fixes
+
+- Use first available server instead of first server in list (which may not work)
+- Use same User-Agent as `TryembedService` for yt-dlp configuration instead of hardcoded value
+- Check other servers for specified quality before throwing an error
+- Prevent downloads from being marked as successful when the connection is lost.
+
+### 📚 Documentation
+
+- Improve --help message for readability
+
 ## [0.4.0] - 2026-07-10
 
 ### 🚀 Features
@@ -13,6 +27,7 @@
 
 - Do not throw AnimeNotFoundException when animeTitle is null
 - Add additional validation checks before throwing AnimeNotFoundException
+
 ## [0.3.0] - 2026-07-02
 
 ### 🚀 Features
@@ -29,6 +44,7 @@
 - Hide stacktrace on download subcommand unless verbose is enabled
 - Do not discard string after last {} on --output
 - Validate curly brace matching and ensure non-empty output blocks
+
 ## [0.2.0] - 2026-06-25
 
 ### 🚀 Features
@@ -42,6 +58,7 @@
 - Handle nonce requirement in queryAnime and fetchServer
 - Replace boolean server state with IDLE/READY/FAILED enum
 - Resolve forbidden error caused by stream session binding failure
+
 ## [0.1.0] - 2026-06-23
 
 ### 🚀 Features
