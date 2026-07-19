@@ -54,7 +54,24 @@ application {
     mainClass = 'com.aabid.animedownloader.Main'
 }
 
+distributions {
+    main {
+        contents {
+            from(rootProject.file('LICENSE')) {
+                into("./")
+            }
+        }
+    }
+}
+
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+
+tasks.named('jar') {
+    from(rootProject.file('LICENSE')) {
+        into('META-INF')
+    }
 }
