@@ -267,6 +267,36 @@ No   Server Name   Server Id   Quality
 
 ---
 
-## License
+## Legal
 
-[Apache 2.0](LICENSE)
+### License
+anime-dl is licensed under the [Apache 2.0](LICENSE). See the LICENSE
+file for details.
+
+### Disclaimer
+
+anime-dl is a command-line tool that automates retrieval of anime episode
+data via the AniList API and downloads video streams through tryembed,
+using yt-dlp for the underlying download/muxing pipeline. It does not
+host, cache, or redistribute any video content itself.
+
+- **No DRM circumvention.** anime-dl does not decrypt, bypass, or
+  circumvent any access control or DRM mechanism. It retrieves streams
+  that are already served without such protections by the source it
+  queries.
+- **Source dependency.** This tool depends entirely on tryembed's public
+  availability and structure. It has no relationship with, and is not
+  endorsed by, tryembed, AniList, or any anime rightsholder or
+  distribution platform. If tryembed's access changes or is discontinued,
+  this tool's functionality changes accordingly.
+- **User responsibility.** You are solely responsible for ensuring your
+  use of this tool complies with the copyright laws of your jurisdiction
+  and the terms of service of any site it interacts with.
+- **Personal use.** This project is intended for personal, non-commercial
+  use and as a software engineering exercise (API integration,
+  CLI architecture). It is not intended to facilitate commercial
+  redistribution of copyrighted content.
+
+### No warranty
+This software is provided "as is", without warranty of any kind, express
+or implied. The author assumes no liability for misuse of this tool.
