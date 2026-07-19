@@ -15,14 +15,21 @@
  */
 package com.aabid.animedownloader.cli;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jspecify.annotations.NonNull;
+
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.cli.converter.OutputFormatterConverter;
+import com.aabid.animedownloader.cli.converter.ServerSpecConverter;
 import com.aabid.animedownloader.service.animedl.DownloadException;
 import com.aabid.animedownloader.service.animedl.DownloadRequest;
 import com.aabid.animedownloader.service.animedl.DownloadService;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
+import com.aabid.animedownloader.service.animedl.ServerSpec;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
@@ -37,8 +44,16 @@ import picocli.CommandLine.Parameters;
 )
 public class DownloadSubcommand extends BaseSubcommand {
 
-    @Option(names = {"-s", "--server"}, description = "ID of server to download from")
-    private String serverId;
+    @Option(
+        names = {"-s", "--server"},
+        description = "Server to try, in fallback order (repeatable). " +
+                   "'any' (default) tries all available servers",
+        defaultValue = "any",
+        paramLabel = "serverId",
+        converter = ServerSpecConverter.class
+    )
+    @NonNull
+    private List<ServerSpec> specs = new ArrayList<>();
 
     @Option(
         names = {"-o", "--output"},
@@ -61,7 +76,7 @@ public class DownloadSubcommand extends BaseSubcommand {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    public DownloadSubcommand(ProgramServicesFactory factory) {
+    public DownloadSubcommand(@NonNull ProgramServicesFactory factory) {
         super(factory);
     }
 
@@ -72,7 +87,7 @@ public class DownloadSubcommand extends BaseSubcommand {
             DownloadRequest request = new DownloadRequest.Builder()
                 .setEpisodeId(episodeId)
                 .setAnimeId(animeId)
-                .setServerId(serverId)
+                .setServerId(specs)
                 .setQualityName(quality)
                 .setFormatter(formatter)
                 .setSimulate(simulate)
@@ -80,7 +95,7 @@ public class DownloadSubcommand extends BaseSubcommand {
             service.download(request);
 
             return 0;
-        } catch (DownloadException e) {
+        } catch (IllegalArgumentException | DownloadException e) {
             printError(e.getMessage());
         } catch (AnimeNotFoundException e) {
             printError(e.getMessage());
