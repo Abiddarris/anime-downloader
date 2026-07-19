@@ -32,7 +32,7 @@ dependencies {
     implementation "tools.jackson.core:jackson-databind:3.2.0"
     implementation "info.picocli:picocli:4.7.7"
     implementation "org.slf4j:slf4j-api:2.0.18"
-    implementation 'ch.qos.logback:logback-classic:1.5.34'
+    implementation 'ch.qos.logback:logback-classic:1.5.38'
     implementation "com.github.Abiddarris:Common-Library:0.1.0"
 
     implementation libs.guava
