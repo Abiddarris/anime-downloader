@@ -23,12 +23,14 @@ import org.jspecify.annotations.NonNull;
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.cli.converter.OutputFormatterConverter;
+import com.aabid.animedownloader.cli.converter.QualitySpecConverter;
 import com.aabid.animedownloader.cli.converter.ServerSpecConverter;
 import com.aabid.animedownloader.service.animedl.DownloadException;
 import com.aabid.animedownloader.service.animedl.DownloadRequest;
 import com.aabid.animedownloader.service.animedl.DownloadService;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
+import com.aabid.animedownloader.service.animedl.QualitySpec;
 import com.aabid.animedownloader.service.animedl.ServerSpec;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
@@ -53,7 +55,7 @@ public class DownloadSubcommand extends BaseSubcommand {
         converter = ServerSpecConverter.class
     )
     @NonNull
-    private List<ServerSpec> specs = new ArrayList<>();
+    private List<ServerSpec> serverSpecs = new ArrayList<>();
 
     @Option(
         names = {"-o", "--output"},
@@ -64,8 +66,14 @@ public class DownloadSubcommand extends BaseSubcommand {
     )
     private NewFormatter formatter;
 
-    @Option(names = {"-Q", "--quality"}, description = "Video resolution (e.g. 1080p, 720p, 480p)")
-    private String quality;
+    @Option(
+        names = {"-Q", "--quality"},
+        description = "Video resolution (e.g. 1080p, 720p, 480p)",
+        defaultValue = "any",
+        paramLabel = "quality",
+        converter = QualitySpecConverter.class
+    )
+    private QualitySpec qualitySpec;
 
     @Option(names = { "-S", "--simulate" }, description = "Do not download the video")
     private boolean simulate;
@@ -87,8 +95,8 @@ public class DownloadSubcommand extends BaseSubcommand {
             DownloadRequest request = new DownloadRequest.Builder()
                 .setEpisodeId(episodeId)
                 .setAnimeId(animeId)
-                .setServerId(specs)
-                .setQualityName(quality)
+                .setServerId(serverSpecs)
+                .setQualitySpec(qualitySpec)
                 .setFormatter(formatter)
                 .setSimulate(simulate)
                 .build();

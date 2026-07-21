@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ import com.aabid.animedownloader.service.ytdlp.Retries;
 import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
 import com.aabid.animedownloader.utils.format.NewFormatter;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 
 public class DownloadService {
 
@@ -75,7 +78,7 @@ public class DownloadService {
 
         out.printf("Found: %s — Episode %d%n", episodeInfo.getAnimeTitle(), request.getEpisodeId());
 
-        Selection selection =  select(episode, request.getServerSpec(), request.getQualityName());
+        Selection selection = select(episode, request.getServerSpec(), request.getQualitySpec());
         ServerInfo serverInfo = selection.getServerInfo();
         Quality quality = selection.getQuality();
 
@@ -93,21 +96,69 @@ public class DownloadService {
     }
 
     private static Selection select(@NonNull Episode episode, @NonNull List<ServerSpec> specs,
-            @NonNull String qualityName) throws IOException, AnimeServiceException {
+            @NonNull QualitySpec spec) throws IOException, AnimeServiceException {
         List<ServerInfo> selectedServer = getCandidateServer(episode, specs);
+        if (spec.equals(QualitySpec.ANY)) {
+            return getAnyQuality(episode, selectedServer);
+        }
+
+        if (!spec.equals(QualitySpec.BEST) && !spec.equals(QualitySpec.WORST)) {
+            return getSpecificQuality(episode, spec, selectedServer);
+        }
+
+        return selectForBestOrWorst(episode, spec, selectedServer);
+    }
+
+    private static Selection selectForBestOrWorst(Episode episode, QualitySpec spec, List<ServerInfo> selectedServer)
+            throws IOException, AnimeServiceException {
+        ListMultimap<Integer, Selection> candidateSelection =
+             Multimaps.newListMultimap(new TreeMap<>(), ArrayList::new);
         for (ServerInfo serverInfo : selectedServer) {
             try {
                 Server server = episode.fetchServer(serverInfo);
-                Optional<Quality> quality;
-                if (qualityName != null) {
-                    quality = server.getQuality(qualityName);
-                } else {
-                    log.debug("No --quality specified, using first available quality");
-
-                    quality = server.getQualities()
-                        .stream()
-                        .findFirst();
+                for (Quality quality : server.getQualities()) {
+                    int resolution = getResolution(quality);
+                    candidateSelection.put(resolution, new Selection(serverInfo, quality));
                 }
+            } catch (ServerException e) {
+                log.warn("Fail to fetch {} server", serverInfo.getId());
+            }
+        }
+
+        if (candidateSelection.isEmpty()) {
+            throw new DownloadException("No stream available for the selected quality");
+        }
+
+        log.debug("candidates selection: {}", candidateSelection) ;
+
+        List<Integer> resolutions = new ArrayList<>(candidateSelection.keySet());
+        if (spec.equals(QualitySpec.BEST)) {
+            return candidateSelection.get(resolutions.get(resolutions.size() - 1)).get(0);
+        }
+
+        return candidateSelection.get(resolutions.get(0)).get(0);
+    }
+
+    private static int getResolution(Quality quality) {
+        String name = quality.getName();
+        if (name.endsWith("p")) {
+            name = name.substring(0, name.length() - 1);
+        }
+
+        int res = 0;
+        try {
+            res = Integer.parseInt(name);
+        } catch (NumberFormatException e) {
+        }
+        return res;
+    }
+
+    private static Selection getSpecificQuality(Episode episode, QualitySpec spec, List<ServerInfo> selectedServer)
+            throws IOException, AnimeServiceException {
+        for (ServerInfo serverInfo : selectedServer) {
+            try {
+                Server server = episode.fetchServer(serverInfo);
+                Optional<Quality> quality = server.getQuality(spec.getName());
 
                 if (quality.isPresent()) {
                     return new Selection(serverInfo, quality.get());
@@ -118,6 +169,32 @@ public class DownloadService {
         }
 
         throw new DownloadException("No stream available for the selected quality");
+    }
+
+    private static Selection getAnyQuality(Episode episode, List<ServerInfo> selectedServer)
+            throws IOException, AnimeServiceException {
+        for (ServerInfo serverInfo : selectedServer) {
+            try {
+                Server server = episode.fetchServer(serverInfo);
+                Optional<Quality> quality = server.getQualities()
+                    .stream()
+                    .findFirst();
+
+                if (quality.isPresent()) {
+                    return new Selection(serverInfo, quality.get());
+                }
+            } catch (ServerException e) {
+                log.warn("Fail to fetch {} server", serverInfo.getId());
+            }
+        }
+
+        throw new DownloadException("No stream available for the selected quality");
+    }
+
+    private static Selection getAnyQualities(Episode episode, List<ServerSpec> specs)
+            throws IOException, AnimeServiceException {
+        List<ServerInfo> selectedServer = getCandidateServer(episode, specs);
+        return getAnyQuality(episode, selectedServer);
     }
 
     private static List<ServerInfo> getCandidateServer(Episode episode,

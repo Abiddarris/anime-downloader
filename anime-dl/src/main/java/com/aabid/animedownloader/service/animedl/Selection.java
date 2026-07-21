@@ -38,4 +38,9 @@ class Selection {
         return quality;
     }
 
+    @Override
+    public String toString() {
+        return "Selection [serverInfo=" + serverInfo + ", quality=" + quality + "]";
+    }
+
 }

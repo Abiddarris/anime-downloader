@@ -33,7 +33,7 @@ public class DownloadRequest {
     private final int episodeId;
     private final int animeId;
     private final @NonNull List<ServerSpec> serverSpec;
-    private final String qualityName;
+    private final @NonNull QualitySpec qualitySpec;
     private final NewFormatter formatter;
     private final boolean simulate;
 
@@ -41,7 +41,7 @@ public class DownloadRequest {
         this.episodeId = builder.episodeId;
         this.animeId = builder.animeId;
         this.serverSpec = builder.serverId;
-        this.qualityName = builder.qualityName;
+        this.qualitySpec = builder.qualitySpec;
         this.formatter = builder.formatter;
         this.simulate = builder.simulate;
     }
@@ -58,8 +58,9 @@ public class DownloadRequest {
         return serverSpec;
     }
 
-    public String getQualityName() {
-        return qualityName;
+    @NonNull
+    public QualitySpec getQualitySpec() {
+        return qualitySpec;
     }
 
     public NewFormatter getFormatter() {
@@ -78,7 +79,7 @@ public class DownloadRequest {
         private int episodeId;
         private int animeId;
         private @NonNull List<ServerSpec> serverId = Lists.newArrayList(ServerSpec.ANY);
-        private String qualityName;
+        private @NonNull QualitySpec qualitySpec = QualitySpec.ANY;
         private NewFormatter formatter;
         private boolean simulate;
 
@@ -115,8 +116,8 @@ public class DownloadRequest {
             return this;
         }
 
-        public Builder setQualityName(String qualityName) {
-            this.qualityName = qualityName;
+        public Builder setQualitySpec(@NonNull QualitySpec qualitySpec) {
+            this.qualitySpec = qualitySpec;
             return this;
         }
 
