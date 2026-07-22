@@ -23,6 +23,7 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.aabid.animedownloader.service.anilist.MetadataResponse.Title;
 import com.aabid.animedownloader.service.anilist.SearchResponse.Media;
 
 import okhttp3.MediaType;
@@ -37,16 +38,23 @@ public class AnilistService {
     private static final Logger log = LoggerFactory.getLogger(AnilistService.class);
 
     private static final String ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
-    private static final String ANILIST_QUERY = """
+    private static final String ANILIST_SEARCH_QUERY = """
         query ($search: String, $page: Int, $perPage: Int) {
-        Page(page: $page, perPage: $perPage) {
-            media(search: $search, type: ANIME) {
-            id
-            title { romaji english native}
-            format
-            episodes
+            Page(page: $page, perPage: $perPage) {
+                media(search: $search, type: ANIME) {
+                    id
+                    title { romaji english native}
+                    format
+                    episodes
+                }
             }
         }
+        """;
+    private static final String ANILIST_METADATA_QUERY = """
+        query ($id: Int) {
+            Media(id: $id) {
+                title { romaji english native}
+            }
         }
         """;
 
@@ -65,7 +73,7 @@ public class AnilistService {
 
     @NonNull
     public List<AnimeEntry> search(@NonNull String keyword, int page) throws IOException {
-        GraphQLRequest graphQLRequest = new GraphQLRequest(ANILIST_QUERY);
+        GraphQLRequest graphQLRequest = new GraphQLRequest(ANILIST_SEARCH_QUERY);
         graphQLRequest.setVariable("search", keyword);
         graphQLRequest.setVariable("page", page);
         graphQLRequest.setVariable("perPage", ITEM_PER_PAGE);
@@ -75,6 +83,18 @@ public class AnilistService {
         return searchResponse.data.Page.media.stream()
             .map(this::newAnimeEntry)
             .toList();
+    }
+
+    @NonNull
+    public AnimeMetadata getMetadata(int anilistId) throws IOException {
+        GraphQLRequest graphQLRequest = new GraphQLRequest(ANILIST_METADATA_QUERY);
+        graphQLRequest.setVariable("id", anilistId);
+
+        String response = executeGraphQLRequest(graphQLRequest);
+
+        MetadataResponse metadataResponse = mapper.readValue(response, MetadataResponse.class);
+        Title title = metadataResponse.data.Media.title;
+        return new AnimeMetadata(anilistId, title.romaji, title.nativeTitle, title.english);
     }
 
     @NonNull
@@ -96,7 +116,7 @@ public class AnilistService {
             log.debug("Received GraphQL response (Status: {}): {}", response.code(), responseBody);
 
             return responseBody;
-         }
+        }
     }
 
     @NonNull

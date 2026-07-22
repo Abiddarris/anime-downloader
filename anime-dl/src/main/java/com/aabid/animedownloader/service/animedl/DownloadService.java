@@ -38,6 +38,8 @@ import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.anime.ServerInfo;
 import com.aabid.animedownloader.net.UserAgentProvider;
+import com.aabid.animedownloader.service.anilist.AnilistService;
+import com.aabid.animedownloader.service.anilist.AnimeMetadata;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
@@ -59,11 +61,14 @@ public class DownloadService {
 
     private @NonNull UserAgentProvider userAgentProvider;
 
+    private @NonNull AnilistService anilistService;
+
     public DownloadService(@NonNull ProgramServices services) {
         this.source = services.getSource();
         this.ytDlpService = services.getYtDlpService();
         this.out = services.getOut();
         this.userAgentProvider = services.getUserAgentProvider();
+        this.anilistService = services.getAnilistService();
     }
 
     public void download(DownloadRequest request) throws IOException, AnimeServiceException, YtDlpInvocationException,
@@ -86,7 +91,14 @@ public class DownloadService {
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
         String link = episode.resolveQuality(quality);
-        String output = getOutputName(request.getFormatter(), episodeInfo, serverInfo, quality);
+
+        out.printf(
+            "Fetching anime metadata for %d (AniList ID)%n",
+            request.getEpisodeId(), request.getAnimeId()
+        );
+
+        AnimeMetadata metadata = anilistService.getMetadata(request.getAnimeId());
+        String output = getOutputName(request.getFormatter(), episodeInfo, serverInfo, quality, metadata);
 
         out.println("Passing stream link to yt-dlp for download");
 
@@ -253,11 +265,15 @@ public class DownloadService {
     }
 
     private String getOutputName(@NonNull NewFormatter formatter, @NonNull EpisodeInfo episodeInfo,
-                                 @NonNull ServerInfo serverInfo, @NonNull Quality quality) {
+                                 @NonNull ServerInfo serverInfo, @NonNull Quality quality,
+                                @NonNull AnimeMetadata animeMetadata) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", episodeInfo.getAnilistId());
         metadata.put("episode", episodeInfo.getEpisode());
-        metadata.put("anime_title", episodeInfo.getAnimeTitle());
+        metadata.put("anime_title", animeMetadata.getRomajiTitle());
+        metadata.put("english_anime_title", animeMetadata.getEnglishTitle());
+        metadata.put("native_anime_title", animeMetadata.getNativeTitle());
+        metadata.put("tryembed_anime_title", episodeInfo.getAnimeTitle());
         metadata.put("ext", "%(ext)s");
         metadata.put("server_name", serverInfo.getName());
         metadata.put("server_id", serverInfo.getId());
