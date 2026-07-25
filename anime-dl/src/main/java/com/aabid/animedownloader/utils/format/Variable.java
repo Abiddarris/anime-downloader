@@ -15,20 +15,51 @@
  */
 package com.aabid.animedownloader.utils.format;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.jspecify.annotations.NonNull;
+
 class Variable implements Statement {
 
-    private String variableName;
+    @NonNull
+    private final String variableName;
 
+    @NonNull
+    private final List<Transformation> transformations = new ArrayList<>();
+
+    @SuppressWarnings("null")
     public Variable(String variableName) {
-        this.variableName = variableName;
+        String[] components = variableName.split(":");
+        this.variableName = components[0];
+
+        for (int i = 1; i < components.length; i++) {
+            if (components[i].equals("upper")) {
+                transformations.add(CaseTransformation.UPPER);
+            } else if (components[i].equals("lower")) {
+                transformations.add(CaseTransformation.LOWER);
+            } else {
+                throw new IllegalArgumentException("Unknown specifier: " + components[i]);
+            }
+        }
+
+        if (transformations.stream()
+            .filter(t -> t instanceof CaseTransformation)
+            .count() > 1) {
+            throw new IllegalArgumentException("upper and lower are mutually exclusive");
+        }
     }
 
+    @SuppressWarnings("null")
     @Override
     public String evaluate(Map<String, Object> values) {
-        return Objects.toString(values.get(variableName));
+        String value = Objects.toString(values.get(variableName));
+        for (Transformation transformation : transformations) {
+            value = transformation.apply(value);
+        }
+        return value;
     }
 
 }

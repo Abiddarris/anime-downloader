@@ -64,6 +64,27 @@ class NewFormatterTest {
 
             assertTrue(formatter instanceof NewFormatter);
         }
+
+        @Test
+        @DisplayName("Happy path: format with multiple transformations (should fail)")
+        void happyPathMultipleTransformations() {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new NewFormatter("Hello {name:upper:lower}")
+            );
+            assertTrue(ex.getMessage().contains("upper and lower are mutually exclusive"));
+        }
+
+        @Test
+        @DisplayName("Happy path: format with unknown transformation")
+        void happyPathUnknownTransformation() {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new NewFormatter("Hello {name:unknown}")
+            );
+            assertTrue(ex.getMessage().contains("Unknown specifier: unknown"));
+        }
+
     }
 
     @Nested
@@ -241,6 +262,107 @@ class NewFormatterTest {
             String result = formatter.format(values);
             assertEquals("Hello Charlie", result);
         }
+
+        @Test
+        @DisplayName("Happy path: upper transformation works correctly")
+        void happyPathUpperTransformationWorks() {
+            NewFormatter formatter = new NewFormatter("Hello {name:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "alice");
+            String result = formatter.format(values);
+            assertEquals("Hello ALICE", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: lower transformation works correctly")
+        void happyPathLowerTransformationWorks() {
+            NewFormatter formatter = new NewFormatter("Hello {name:lower}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "ALICE");
+            String result = formatter.format(values);
+            assertEquals("Hello alice", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: upper transformation with mixed case")
+        void happyPathUpperTransformationMixedCase() {
+            NewFormatter formatter = new NewFormatter("Hello {name:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "AlIce");
+            String result = formatter.format(values);
+            assertEquals("Hello ALICE", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: lower transformation with mixed case")
+        void happyPathLowerTransformationMixedCase() {
+            NewFormatter formatter = new NewFormatter("Hello {name:lower}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "AlIce");
+            String result = formatter.format(values);
+            assertEquals("Hello alice", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: upper transformation with numbers and special chars")
+        void happyPathUpperTransformationWithNumbers() {
+            NewFormatter formatter = new NewFormatter("User: {id:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("id", "user123!@#");
+            String result = formatter.format(values);
+            assertEquals("User: USER123!@#", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: lower transformation with numbers and special chars")
+        void happyPathLowerTransformationWithNumbers() {
+            NewFormatter formatter = new NewFormatter("User: {id:lower}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("id", "USER123!@#");
+            String result = formatter.format(values);
+            assertEquals("User: user123!@#", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: multiple placeholders with different transformations")
+        void happyPathMultiplePlaceholdersDifferentTransformations() {
+            NewFormatter formatter = new NewFormatter("Hello {name:upper}, you are {age:lower} years old and live in {city:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "John Doe");
+            values.put("age", "25");
+            values.put("city", "new york");
+            String result = formatter.format(values);
+            assertEquals("Hello JOHN DOE, you are 25 years old and live in NEW YORK", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: transformation with null value")
+        void happyPathTransformationWithNullValue() {
+            NewFormatter formatter = new NewFormatter("Hello {name:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", null);
+            String result = formatter.format(values);
+            assertEquals("Hello NULL", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: transformation with empty string")
+        void happyPathTransformationWithEmptyString() {
+            NewFormatter formatter = new NewFormatter("Hello {name:upper}");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "");
+            String result = formatter.format(values);
+            assertEquals("Hello ", result);
+        }
+
+        @Test
+        @DisplayName("Edge case: missing key with transformation results in null in output")
+        void edgeCaseMissingKeyWithTransformationResultsInNull() {
+            NewFormatter formatter = new NewFormatter("Hello {missing:upper}");
+            Map<String, Object> values = new HashMap<>();
+            String result = formatter.format(values);
+            assertEquals("Hello NULL", result);
+        }
     }
 
     @Nested
@@ -312,6 +434,26 @@ class NewFormatterTest {
             Map<String, Object> values = new HashMap<>();
             String result = formatter.format(values);
             assertEquals("Hello {world}!", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: escaped braces with transformation inside")
+        void happyPathEscapedBracesWithTransformationInside() {
+            NewFormatter formatter = new NewFormatter("Hello {{name:upper}}");
+            Map<String, Object> values = new HashMap<>();
+            String result = formatter.format(values);
+            assertEquals("Hello {name:upper}", result);
+        }
+
+        @Test
+        @DisplayName("Happy path: mixed escaped and actual braces with transformations")
+        void happyPathMixedEscapedAndActualBracesWithTransformations() {
+            NewFormatter formatter = new NewFormatter("Hello {{name:upper}}, you are {age:lower} years old");
+            Map<String, Object> values = new HashMap<>();
+            values.put("name", "alice");
+            values.put("age", "25");
+            String result = formatter.format(values);
+            assertEquals("Hello {name:upper}, you are 25 years old", result);
         }
     }
 
