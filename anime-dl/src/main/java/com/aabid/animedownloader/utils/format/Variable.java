@@ -28,23 +28,54 @@ class Variable implements Statement {
     private final String variableName;
 
     @NonNull
-    private final List<Transformation> transformations = new ArrayList<>();
+    private final List<Transformation> transformations;
 
     @SuppressWarnings("null")
     public Variable(String variableName) {
         String[] components = variableName.split(":");
         this.variableName = components[0];
+        this.transformations = createTransformations(components);
+    }
 
+    private List<Transformation> createTransformations(String[] components) {
+        List<Transformation> transformations = new ArrayList<>();
         for (int i = 1; i < components.length; i++) {
             if (components[i].equals("upper")) {
                 transformations.add(CaseTransformation.UPPER);
+                continue;
             } else if (components[i].equals("lower")) {
                 transformations.add(CaseTransformation.LOWER);
-            } else {
-                throw new IllegalArgumentException("Unknown specifier: " + components[i]);
+                continue;
             }
+
+            try {
+                int maxLength = Integer.parseInt(components[i]);
+                if (maxLength < 0) {
+                    throw new IllegalArgumentException("width transformation should be positive");
+                }
+                transformations.add(new MaxWidthTransformation(maxLength));
+                continue;
+            } catch (NumberFormatException ignored) {
+            }
+
+            throw new IllegalArgumentException("Unknown specifier: " + components[i]);
         }
 
+        checkNoTwoCaseTransformations(transformations);
+        checkNoTwoWidthTransformations(transformations);
+
+        return transformations;
+    }
+
+    private void checkNoTwoWidthTransformations(List<Transformation> transformations) {
+        if (transformations.stream()
+                .filter(t -> t instanceof WidthTransformation)
+                .count() > 1) {
+            throw new IllegalArgumentException("only one width transformation can be specified");
+        }
+    }
+
+    private void checkNoTwoCaseTransformations(List<Transformation> transformations) {
         if (transformations.stream()
             .filter(t -> t instanceof CaseTransformation)
             .count() > 1) {
