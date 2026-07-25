@@ -22,7 +22,9 @@ public class Progress {
 
     @NonNull
     private final State state;
-    private final long downloaded;
+
+    @Nullable
+    private final Long downloaded;
 
     @Nullable
     private final Long totalEstimate;
@@ -39,7 +41,7 @@ public class Progress {
     @Nullable
     private final Long fragmentIndex;
 
-    public Progress(@NonNull State state, long downloaded, @Nullable Long totalEstimate, @Nullable Long total,
+    public Progress(@NonNull State state, @Nullable Long downloaded, @Nullable Long totalEstimate, @Nullable Long total,
             @Nullable Long speed, @Nullable Long fragmentCount, @Nullable Long fragmentIndex) {
         this.state = state;
         this.downloaded = downloaded;
@@ -55,7 +57,8 @@ public class Progress {
         return state;
     }
 
-    public long getDownloaded() {
+    @Nullable
+    public Long getDownloaded() {
         return downloaded;
     }
 

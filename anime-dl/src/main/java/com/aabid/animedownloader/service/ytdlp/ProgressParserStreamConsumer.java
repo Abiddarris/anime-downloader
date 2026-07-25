@@ -60,10 +60,6 @@ class ProgressParserStreamConsumer implements StreamConsumer {
 
             String status = matcher.group("status");
             Long downloaded = parseAsLong(matcher, "downloaded");
-            if (downloaded == null) {
-                throw new IllegalArgumentException("downloaded section should not be null");
-            }
-
             Long totalEstimate = parseAsLong(matcher, "totalEstimate");
             Long total = parseAsLong(matcher, "total");
             Long speed = parseAsLong(matcher, "speed");
