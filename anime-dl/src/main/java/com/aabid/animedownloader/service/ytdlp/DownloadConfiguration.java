@@ -29,10 +29,12 @@ public class DownloadConfiguration {
     private final Path temp;
     private final List<String> headers;
     private final Retries retries;
+    private final boolean overwrite;
 
     private DownloadConfiguration(
             int buffersize, int concurrentFragment, boolean downloadSubtitle,
-            boolean downloadThumbnail, Path temp, List<String> headers, Retries retries
+            boolean downloadThumbnail, Path temp, List<String> headers, Retries retries,
+            boolean overwrite
     ) {
         this.buffersize = buffersize;
         this.concurrentFragment = concurrentFragment;
@@ -41,6 +43,7 @@ public class DownloadConfiguration {
         this.temp = temp;
         this.headers = new ArrayList<>(headers);
         this.retries = retries;
+        this.overwrite = overwrite;
     }
 
     public List<String> getHeaders() {
@@ -53,6 +56,10 @@ public class DownloadConfiguration {
 
     public Path getTemp() {
         return temp;
+    }
+
+    public boolean isOverwrite() {
+        return overwrite;
     }
 
     public int getBuffersize() {
@@ -80,9 +87,15 @@ public class DownloadConfiguration {
         private Path temp;
         private List<String> headers = new ArrayList<>();
         private Retries retries = Retries.of(10);
+        private boolean overwrite = false;
 
         public Builder setTemp(Path temp) {
             this.temp = temp;
+            return this;
+        }
+
+        public Builder setOverwrite(boolean overwrite) {
+            this.overwrite = overwrite;
             return this;
         }
 
@@ -126,7 +139,7 @@ public class DownloadConfiguration {
         public DownloadConfiguration build() {
             return new DownloadConfiguration(
                 buffersize, concurrentFragment, downloadSubtitle,
-                downloadThumbnail, temp, headers, retries
+                downloadThumbnail, temp, headers, retries, overwrite
             );
         }
     }

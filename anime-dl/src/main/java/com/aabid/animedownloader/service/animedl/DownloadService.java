@@ -103,7 +103,7 @@ public class DownloadService {
         out.println("Passing stream link to yt-dlp for download");
 
         if (!request.isSimulate()) {
-            invokeYtDlp(link, Path.of(output));
+            invokeYtDlp(request, link, Path.of(output));
         }
     }
 
@@ -239,7 +239,7 @@ public class DownloadService {
         return candidateServers;
     }
 
-    private void invokeYtDlp(String url, Path dest) throws IOException, YtDlpInvocationException,
+    private void invokeYtDlp(DownloadRequest request, String url, Path dest) throws IOException, YtDlpInvocationException,
              InterruptedException, HttpException {
         List<String> headers = new ArrayList<>();
         headers.add("User-Agent: " + userAgentProvider.getUserAgent());
@@ -256,6 +256,7 @@ public class DownloadService {
 
         DownloadConfiguration configuration = new DownloadConfiguration.Builder()
             .setHeaders(headers)
+            .setOverwrite(request.isOverwrite())
             .setFragmentRetries(Retries.infinite())
             .setBuffersize(1024 * 16)
             .build();

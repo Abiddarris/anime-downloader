@@ -36,6 +36,7 @@ public class DownloadRequest {
     private final @NonNull QualitySpec qualitySpec;
     private final NewFormatter formatter;
     private final boolean simulate;
+    private final boolean overwrite;
 
     private DownloadRequest(Builder builder) {
         this.episodeId = builder.episodeId;
@@ -44,6 +45,7 @@ public class DownloadRequest {
         this.qualitySpec = builder.qualitySpec;
         this.formatter = builder.formatter;
         this.simulate = builder.simulate;
+        this.overwrite = builder.overwrite;
     }
 
     public int getEpisodeId() {
@@ -71,6 +73,10 @@ public class DownloadRequest {
         return simulate;
     }
 
+    public boolean isOverwrite() {
+        return overwrite;
+    }
+
     /**
      * Builder for DownloadRequest objects.
      */
@@ -82,6 +88,7 @@ public class DownloadRequest {
         private @NonNull QualitySpec qualitySpec = QualitySpec.ANY;
         private NewFormatter formatter;
         private boolean simulate;
+        private boolean overwrite = true;
 
         public Builder setEpisodeId(int episodeId) {
             this.episodeId = episodeId;
@@ -128,6 +135,11 @@ public class DownloadRequest {
 
         public Builder setSimulate(boolean simulate) {
             this.simulate = simulate;
+            return this;
+        }
+
+        public Builder setOverwrite(boolean overwrite) {
+            this.overwrite = overwrite;
             return this;
         }
 

@@ -73,10 +73,19 @@ public class DownloadSubcommand extends BaseSubcommand {
         paramLabel = "quality",
         converter = QualitySpecConverter.class
     )
+    @NonNull
     private QualitySpec qualitySpec;
 
     @Option(names = { "-S", "--simulate" }, description = "Do not download the video")
     private boolean simulate;
+
+    @Option(
+        names = {"--overwrite"},
+        description = "Overwrite existing files (default: --no-overwrite)",
+        defaultValue = "false",
+        negatable = true
+    )
+    private boolean overwrite;
 
     @Parameters(index = "0", description = "AniList anime ID")
     private int animeId;
@@ -84,6 +93,7 @@ public class DownloadSubcommand extends BaseSubcommand {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
+    @SuppressWarnings("null")
     public DownloadSubcommand(@NonNull ProgramServicesFactory factory) {
         super(factory);
     }
@@ -99,6 +109,7 @@ public class DownloadSubcommand extends BaseSubcommand {
                 .setQualitySpec(qualitySpec)
                 .setFormatter(formatter)
                 .setSimulate(simulate)
+                .setOverwrite(overwrite)
                 .build();
             service.download(request);
 

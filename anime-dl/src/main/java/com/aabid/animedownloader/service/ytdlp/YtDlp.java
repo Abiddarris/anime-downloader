@@ -109,6 +109,13 @@ public class YtDlp {
         if (configuration.getTemp() != null) {
             builder.addOption("-P", "temp:" + configuration.getTemp().toAbsolutePath().normalize());
         }
+
+        if (configuration.isOverwrite()) {
+            builder.addBooleanOptions("--force-overwrites");
+        } else {
+            builder.addBooleanOptions("--no-force-overwrites");
+        }
+
     }
 
 }
