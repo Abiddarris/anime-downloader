@@ -6,13 +6,14 @@ A lightweight command-line tool to search, inspect, and download anime episodes 
 
 - **Anime search** — find AniList IDs by name or keyword, no need to look them up manually
 - **Episode inspection** — check available servers and qualities before downloading
-- **Quality selection** — specify target resolution or let it pick the best available
-- **Server selection** — target a specific streaming server by ID
+- **Quality selection** — specify target resolution or let it pick the best/worst/any available
+- **Server selection** — target specific streaming servers by ID with fallback control
 - **AniList integration** — identify anime using standard AniList IDs
 - **Custom progress output** — shows download progress without relying on yt-dlp output
 - **Dry-run support** — simulate downloads with `-s/--simulate` flag
 - **Configurable timeouts** — set connection, read, and write timeouts
-- **Enhanced output formatting** — curly bracket escaping and additional format keys
+- **Enhanced output formatting** — curly bracket escaping, additional format keys, width, case, and justify transformations
+- **File overwrite control** — prevent or allow overwriting existing files
 
 ---
 
@@ -22,22 +23,22 @@ Distributed as a pre-compiled application bundle via Gradle.
 
 1. Go to the [Releases](../../releases) page
 2. Download the archive for your platform:
-   - `anime-dl-0.4.1.zip`
-   - `anime-dl-0.4.1.tar`
+   - `anime-dl-0.5.0.zip`
+   - `anime-dl-0.5.0.tar`
 3. Extract the archive:
 
 ```bash
 # ZIP
-unzip anime-dl-0.4.1.zip
+unzip anime-dl-0.5.0.zip
 
 # TAR
-tar -xvf anime-dl-0.4.1.tar
+tar -xvf anime-dl-0.5.0.tar
 ```
 
 4. Run the binary:
 
 ```bash
-cd anime-dl-0.4.1/bin
+cd anime-dl-0.5.0/bin
 ./anime-dl --help
 ```
 
@@ -70,23 +71,17 @@ Commands:
 Find an anime's AniList ID by name or keyword — the usual starting point before `info` or `download`.
 
 ```
-Usage: anime-downloader search [-hvV] [--connect-timeout=mills] [-p=<page>]
-                               [--read-timeout=mills] [--write-timeout=mills]
-                               <keyword>
+Usage: anime-downloader search [-hvV] [--connect-timeout=mills] [-p=<page>] [--read-timeout=mills] [--write-timeout=mills] <keyword>
 Search for anime on AniList by name or keyword.
       <keyword>              The name or keyword of the anime you want to find.
       --connect-timeout=mills
-                             Connection timeout in milliseconds. 0 for no
-                               timeout (default: 10000)
+                             Connection timeout in milliseconds. 0 for no timeout (default: 10000)
   -h, --help                 Show this help message and exit.
-  -p, --page=<page>          The page number of search results to display
-                               (default: 1).
-      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
-                               (default: 30000)
+  -p, --page=<page>          The page number of search results to display (default: 1).
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout (default: 30000)
   -v, --verbose              Enable debug logging
   -V, --version              Print version information and exit.
-      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
-                               (default: 10000)
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout (default: 10000)
 ```
 
 ### info
@@ -94,22 +89,17 @@ Search for anime on AniList by name or keyword.
 Fetch and display available servers and qualities for an episode without downloading.
 
 ```
-Usage: anime-downloader info [-hvV] [--connect-timeout=mills]
-                             [--read-timeout=mills] [--write-timeout=mills]
-                             <animeId> <episodeId>
+Usage: anime-downloader info [-hvV] [--connect-timeout=mills] [--read-timeout=mills] [--write-timeout=mills] <animeId> <episodeId>
 Fetch and display available servers and qualities for an episode
       <animeId>              AniList anime ID
       <episodeId>            Episode number
       --connect-timeout=mills
-                             Connection timeout in milliseconds. 0 for no
-                               timeout (default: 10000)
+                             Connection timeout in milliseconds. 0 for no timeout (default: 10000)
   -h, --help                 Show this help message and exit.
-      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
-                               (default: 30000)
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout (default: 30000)
   -v, --verbose              Enable debug logging
   -V, --version              Print version information and exit.
-      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
-                               (default: 10000)
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout (default: 10000)
 ```
 
 ### download
@@ -117,28 +107,23 @@ Fetch and display available servers and qualities for an episode
 Download an episode to local storage.
 
 ```
-Usage: anime-downloader download [-hSvV] [--connect-timeout=mills] [-o=output]
-                                 [-Q=<quality>] [--read-timeout=mills]
-                                 [-s=<serverId>] [--write-timeout=mills]
-                                 <animeId> <episodeId>
+Usage: anime-downloader download [-hSvV] [--[no-]overwrite] [--connect-timeout=mills] [-o=output] [-Q=quality]
+                                 [--read-timeout=mills] [--write-timeout=mills] [-s=serverId]... <animeId> <episodeId>
 Download an anime episode from tryembed.us.cc
       <animeId>              AniList anime ID
       <episodeId>            Episode number
       --connect-timeout=mills
-                             Connection timeout in milliseconds. 0 for no
-                               timeout (default: 10000)
+                             Connection timeout in milliseconds. 0 for no timeout (default: 10000)
   -h, --help                 Show this help message and exit.
-  -o, --output=output        Output file name (default: {anime_title} #
-                               {episode} [{id}].{ext})
-  -Q, --quality=<quality>    Video resolution (e.g. 1080p, 720p, 480p)
-      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout
-                               (default: 30000)
-  -s, --server=<serverId>    ID of server to download from
+  -o, --output=output        Output file name (default: {anime_title} #{episode} [{id}].{ext})
+      --[no-]overwrite       Overwrite existing files (default: --no-overwrite)
+  -Q, --quality=quality      Video resolution (e.g. any, worst, best, 1080p, 720p, 360p)
+      --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout (default: 30000)
+  -s, --server=serverId      Server to try, in fallback order (repeatable). 'any' (default) tries all available servers
   -S, --simulate             Do not download the video
   -v, --verbose              Enable debug logging
   -V, --version              Print version information and exit.
-      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout
-                               (default: 10000)
+      --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout (default: 10000)
 ```
 
 #### Output filename formatting
@@ -154,6 +139,11 @@ The `-o`/`--output` flag accepts a template string with the following placeholde
 | `{server_id}`     | ID of the server being used          |
 | `{server_name}`   | Name of the server being used        |
 | `{quality}`       | Selected video quality               |
+
+**Transformations:**
+- Width: `{anime_title:20}` (pads/truncates to 20 characters)
+- Case: `{anime_title:upper}`, `{anime_title:lower}`
+- Justify: `{anime_title:<20}` (left), `{anime_title:>20}` (right)
 
 Curly brackets can be escaped by doubling them: `{{` and `}}`.
 
@@ -222,6 +212,23 @@ No   Server Name   Server Id   Quality
 ./anime-dl download -Q 1080p 7791 8
 ```
 
+**Download with quality selection (any/best/worst):**
+
+```bash
+./anime-dl download -Q any 7791 8      # Find first available stream
+./anime-dl download -Q best 7791 8     # Find best quality stream
+./anime-dl download -Q worst 7791 8    # Find worst quality stream
+```
+
+**Server selection with fallback control:**
+
+```bash
+./anime-dl download -s beta 7791 8                    # Only search in beta
+./anime-dl download -s beta -s none 7791 8            # Same as above (none stops fallback)
+./anime-dl download -s beta -s any 7791 8             # Try beta, then any remaining
+./anime-dl download -s beta -s alpha -s any 7791 8    # Try beta, then alpha, then any remaining
+```
+
 **Download from a specific server with a custom filename template:**
 
 ```bash
@@ -246,10 +253,24 @@ No   Server Name   Server Id   Quality
 ./anime-dl download --connect-timeout=5000 --read-timeout=20000 --write-timeout=5000 7791 8
 ```
 
-**Use advanced output formatting with new placeholders:**
+**Use advanced output formatting with new placeholders and transformations:**
 
 ```bash
-./anime-dl download -o "{anime_title} [{id}] {quality}p ({server_name}){ext}" 7791 8
+./anime-dl download -o "{anime_title:>20} [{id}] {quality}p ({server_name}){ext}" 7791 8
+./anime-dl download -o "{anime_title:upper} #{episode} [{id}].{ext}" 7791 8
+./anime-dl download -o "{anime_title:<20} #{episode} [{id}].{ext}" 7791 8
+```
+
+**Prevent overwriting existing files (default behavior):**
+
+```bash
+./anime-dl download --no-overwrite 7791 8
+```
+
+**Allow overwriting existing files:**
+
+```bash
+./anime-dl download --overwrite 7791 8
 ```
 
 **Search with pagination:**
