@@ -1,4 +1,26 @@
 
+## [0.5.0] - 2026-07-26
+
+### 🚀 Features
+
+- Support repeatable --server with any/none fallback control
+- Add 'any', 'worst', 'best' as supported values for --quality option
+- [**breaking**] Switch anime_title to AniList romaji, add title variants
+- Add upper and lower case transformation for `--output`
+- Add width transformation for `--output`
+- Add --no-overwrite and --overwrite options to download command
+- Add justify support (e.g., `{anime_title:<20}`, `{anime_title:>20}`) for `--output`
+
+### 🐛 Bug Fixes
+
+- Prevent exception from being thrown when download is already succeeded
+
+### 📚 Documentation
+
+- Update `--quality` description
+- Update README.md for v0.5.0
+- Add `*_title` keys to `README.md`
+
 ## [0.4.1] - 2026-07-19
 
 ### 🐛 Bug Fixes
