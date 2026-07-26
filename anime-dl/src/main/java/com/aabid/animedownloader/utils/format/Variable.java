@@ -22,6 +22,8 @@ import java.util.Objects;
 
 import org.jspecify.annotations.NonNull;
 
+import com.aabid.animedownloader.utils.format.JustifyTransformation.Justify;
+
 class Variable implements Statement {
 
     @NonNull
@@ -40,25 +42,39 @@ class Variable implements Statement {
     private List<Transformation> createTransformations(String[] components) {
         List<Transformation> transformations = new ArrayList<>();
         for (int i = 1; i < components.length; i++) {
-            if (components[i].equals("upper")) {
+            String component = components[i];
+            if (component.equals("upper")) {
                 transformations.add(CaseTransformation.UPPER);
                 continue;
-            } else if (components[i].equals("lower")) {
+            } else if (component.equals("lower")) {
                 transformations.add(CaseTransformation.LOWER);
                 continue;
             }
 
             try {
-                int maxLength = Integer.parseInt(components[i]);
-                if (maxLength < 0) {
+                Justify justify = null;
+                if (component.startsWith("<")) {
+                    component = component.substring(1);
+                    justify = Justify.LEFT;
+                } else if (component.startsWith(">")) {
+                    component = component.substring(1);
+                    justify = Justify.RIGHT;
+                }
+
+                int length = Integer.parseInt(component);
+                if (length < 0) {
                     throw new IllegalArgumentException("width transformation should be positive");
                 }
-                transformations.add(new MaxWidthTransformation(maxLength));
+
+                if (justify == null)
+                    transformations.add(new MaxWidthTransformation(length));
+                else
+                    transformations.add(new JustifyTransformation(length, justify));
                 continue;
             } catch (NumberFormatException ignored) {
             }
 
-            throw new IllegalArgumentException("Unknown specifier: " + components[i]);
+            throw new IllegalArgumentException("Unknown specifier: " + component);
         }
 
         checkNoTwoCaseTransformations(transformations);
