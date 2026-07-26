@@ -68,7 +68,7 @@ public class DownloadSubcommand extends BaseSubcommand {
 
     @Option(
         names = {"-Q", "--quality"},
-        description = "Video resolution (e.g. 1080p, 720p, 480p)",
+        description = "Video resolution (e.g. any, worst, best, 1080p, 720p, 360p)",
         defaultValue = "any",
         paramLabel = "quality",
         converter = QualitySpecConverter.class
