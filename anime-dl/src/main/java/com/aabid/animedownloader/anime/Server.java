@@ -39,6 +39,7 @@ public class Server {
         return info;
     }
 
+    @SuppressWarnings("null")
     @NonNull
     public List<Quality> getQualities() {
         return Collections.unmodifiableList(qualities);
