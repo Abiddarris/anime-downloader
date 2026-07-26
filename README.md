@@ -139,6 +139,9 @@ The `-o`/`--output` flag accepts a template string with the following placeholde
 | `{server_id}`     | ID of the server being used          |
 | `{server_name}`   | Name of the server being used        |
 | `{quality}`       | Selected video quality               |
+| `{english_anime_title}` | English title of the anime       |
+| `{native_anime_title}`  | Native title of the anime        |
+| `{tryembed_anime_title}`| Anime title from tryembed source   |
 
 **Transformations:**
 - Width: `{anime_title:20}` (pads/truncates to 20 characters)
