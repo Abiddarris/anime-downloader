@@ -99,7 +99,7 @@ public class DownloadSubcommand extends BaseSubcommand {
     }
 
     @Override
-    protected int start(ProgramServices services) throws Exception {
+    protected int start(@NonNull ProgramServices services) throws Exception {
         DownloadService service = new DownloadService(services);
         try {
             DownloadRequest request = new DownloadRequest.Builder()

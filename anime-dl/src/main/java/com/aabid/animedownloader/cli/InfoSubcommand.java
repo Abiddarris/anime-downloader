@@ -59,7 +59,7 @@ public class InfoSubcommand extends BaseSubcommand {
     }
 
     @Override
-    protected int start(ProgramServices services) throws Exception {
+    protected int start(@NonNull ProgramServices services) throws Exception {
         try {
             return printEpisodeInfo(services);
         } catch (AnimeNotFoundException e) {
@@ -81,6 +81,8 @@ public class InfoSubcommand extends BaseSubcommand {
         AnimeService anime = services.getSource();
 
         Episode episode = anime.queryEpisode(animeId, episodeId);
+
+        @SuppressWarnings("null")
         List<Server> servers = episode.getServers()
                 .stream()
                 .map(server -> fetchServer(episode, server))

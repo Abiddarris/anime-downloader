@@ -142,7 +142,7 @@ abstract class BaseSubcommand implements Callable<Integer> {
         return err;
     }
 
-    protected abstract int start(ProgramServices services) throws Exception;
+    protected abstract int start(@NonNull ProgramServices services) throws Exception;
 
     protected void printStackTrace(Throwable throwable) {
         log.debug("Detailed Stacktrace: ", throwable);

@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
+import org.jspecify.annotations.NonNull;
+
 import com.aabid.animedownloader.service.anilist.AnilistService;
 import com.aabid.animedownloader.service.anilist.AnimeEntry;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
@@ -49,14 +51,16 @@ public class SearchSubcommand extends BaseSubcommand {
         index = "0",
         description = "The name or keyword of the anime you want to find."
     )
+    @NonNull
     private String keyword;
 
-    public SearchSubcommand(ProgramServicesFactory factory) {
+    @SuppressWarnings("null")
+    public SearchSubcommand(@NonNull ProgramServicesFactory factory) {
         super(factory);
     }
 
     @Override
-    protected int start(ProgramServices services) throws Exception {
+    protected int start(@NonNull ProgramServices services) throws Exception {
         return search(services);
     }
 
