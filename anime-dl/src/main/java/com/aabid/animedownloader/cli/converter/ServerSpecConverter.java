@@ -22,6 +22,7 @@ import picocli.CommandLine.ITypeConverter;
 public class ServerSpecConverter implements ITypeConverter<ServerSpec> {
 
     @Override
+    @SuppressWarnings("null")
     public ServerSpec convert(String value) throws Exception {
         return new ServerSpec(value);
     }

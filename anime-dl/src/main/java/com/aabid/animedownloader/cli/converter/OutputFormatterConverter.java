@@ -21,6 +21,7 @@ import picocli.CommandLine.ITypeConverter;
 
 public class OutputFormatterConverter implements ITypeConverter<NewFormatter> {
 
+    @SuppressWarnings("null")
     @Override
     public NewFormatter convert(String value) throws Exception {
         return new NewFormatter(value);
