@@ -19,8 +19,10 @@ import org.jspecify.annotations.NonNull;
 
 public class ServerSpec {
 
+    @NonNull
     public static final ServerSpec ANY = new ServerSpec("any");
 
+    @NonNull
     public static final ServerSpec NONE = new ServerSpec("none");
 
     private final @NonNull String name;

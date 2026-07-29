@@ -32,6 +32,7 @@ import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.service.animedl.QualitySpec;
 import com.aabid.animedownloader.service.animedl.ServerSpec;
+import com.aabid.animedownloader.service.animedl.SpecBasedStreamSelector;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
@@ -55,7 +56,7 @@ public class DownloadSubcommand extends BaseSubcommand {
         converter = ServerSpecConverter.class
     )
     @NonNull
-    private List<ServerSpec> serverSpecs = new ArrayList<>();
+    private List<@NonNull ServerSpec> serverSpecs = new ArrayList<>();
 
     @Option(
         names = {"-o", "--output"},
@@ -105,8 +106,7 @@ public class DownloadSubcommand extends BaseSubcommand {
             DownloadRequest request = new DownloadRequest.Builder()
                 .setEpisodeId(episodeId)
                 .setAnimeId(animeId)
-                .setServerId(serverSpecs)
-                .setQualitySpec(qualitySpec)
+                .setStreamSelector(new SpecBasedStreamSelector(serverSpecs, qualitySpec))
                 .setFormatter(formatter)
                 .setSimulate(simulate)
                 .setOverwrite(overwrite)

@@ -15,14 +15,12 @@
  */
 package com.aabid.animedownloader.service.animedl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.utils.format.NewFormatter;
-import com.google.common.collect.Lists;
 
 /**
  * Request object for downloading anime episodes.
@@ -32,8 +30,7 @@ public class DownloadRequest {
 
     private final int episodeId;
     private final int animeId;
-    private final @NonNull List<ServerSpec> serverSpec;
-    private final @NonNull QualitySpec qualitySpec;
+    private final @NonNull StreamSelector streamSelector;
     private final NewFormatter formatter;
     private final boolean simulate;
     private final boolean overwrite;
@@ -41,8 +38,7 @@ public class DownloadRequest {
     private DownloadRequest(Builder builder) {
         this.episodeId = builder.episodeId;
         this.animeId = builder.animeId;
-        this.serverSpec = builder.serverId;
-        this.qualitySpec = builder.qualitySpec;
+        this.streamSelector = builder.streamSelector;
         this.formatter = builder.formatter;
         this.simulate = builder.simulate;
         this.overwrite = builder.overwrite;
@@ -52,17 +48,13 @@ public class DownloadRequest {
         return episodeId;
     }
 
+    @NonNull
+    public StreamSelector getStreamSelector() {
+        return streamSelector;
+    }
+
     public int getAnimeId() {
         return animeId;
-    }
-
-    public @NonNull List<ServerSpec> getServerSpec() {
-        return serverSpec;
-    }
-
-    @NonNull
-    public QualitySpec getQualitySpec() {
-        return qualitySpec;
     }
 
     public NewFormatter getFormatter() {
@@ -84,8 +76,11 @@ public class DownloadRequest {
 
         private int episodeId;
         private int animeId;
-        private @NonNull List<ServerSpec> serverId = Lists.newArrayList(ServerSpec.ANY);
-        private @NonNull QualitySpec qualitySpec = QualitySpec.ANY;
+
+        @SuppressWarnings("null")
+        private @NonNull StreamSelector streamSelector =
+            new SpecBasedStreamSelector(List.of(ServerSpec.ANY), QualitySpec.ANY);
+
         private NewFormatter formatter;
         private boolean simulate;
         private boolean overwrite = true;
@@ -100,31 +95,10 @@ public class DownloadRequest {
             return this;
         }
 
-        public Builder setServerId(@NonNull List<ServerSpec> specs) {
-            Objects.requireNonNull(specs, "specs can not be null");
+        public Builder setStreamSelector(@NonNull StreamSelector streamSelector) {
+            Objects.requireNonNull(streamSelector, "specs can not be null");
 
-            this.serverId = new ArrayList<>(specs);
-            if (this.serverId.isEmpty()) {
-                this.serverId.add(ServerSpec.ANY);
-                return this;
-            }
-
-            int lastIndex = this.serverId.size() - 1;
-            if ((this.serverId.indexOf(ServerSpec.ANY) > 0 && this.serverId.indexOf(ServerSpec.ANY) != lastIndex) ||
-                (this.serverId.indexOf(ServerSpec.NONE) > 0 && this.serverId.indexOf(ServerSpec.NONE) != lastIndex) ) {
-                throw new IllegalArgumentException("ANY and NONE can only appear on the last element");
-            }
-
-            ServerSpec spec = this.serverId.get(lastIndex);
-            if (!spec.equals(ServerSpec.ANY) && !spec.equals(ServerSpec.NONE)) {
-                this.serverId.add(ServerSpec.NONE);
-            }
-
-            return this;
-        }
-
-        public Builder setQualitySpec(@NonNull QualitySpec qualitySpec) {
-            this.qualitySpec = qualitySpec;
+            this.streamSelector = streamSelector;
             return this;
         }
 
