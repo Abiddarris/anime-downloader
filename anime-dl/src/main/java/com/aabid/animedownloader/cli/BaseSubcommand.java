@@ -104,16 +104,16 @@ abstract class BaseSubcommand implements Callable<Integer> {
             printStackTrace(e);
         } catch (IOException e) {
             printError(
-                """
-                An error occurred while reading or writing data.
-                > This could be due to a problem with your disk, file permissions, interrupted operation, or temporary system issue.
-                > Please check:
-                - That you have sufficient disk space and write permissions
-                - That the target file or directory is not locked or in use by another program
-                - That your storage device is functioning properly
+                String.format(
+                    """
+                    An I/O error occurred: %s
 
-                If the problem continues, try again later or consult the system logs.
-                """
+                    This error comes from an IOException, which is a general indicator of
+                    input/output problems. For more context about and where this occurred,
+                    consider running the command with the --verbose flag.
+                    """,
+                    e.getMessage()
+                )
             );
             printStackTrace(e);
         } catch (Exception e) {
