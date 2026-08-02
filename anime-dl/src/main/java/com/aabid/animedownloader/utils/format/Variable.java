@@ -36,6 +36,10 @@ class Variable implements Statement {
     public Variable(String variableName) {
         String[] components = variableName.split(":");
         this.variableName = components[0];
+        if (!this.variableName.matches("^[A-Za-z_]+$")) {
+            throw new IllegalArgumentException("Variable name must contain only letters and underscores");
+        }
+
         this.transformations = createTransformations(components);
     }
 
