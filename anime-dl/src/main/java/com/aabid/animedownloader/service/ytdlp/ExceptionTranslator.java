@@ -15,25 +15,30 @@
  */
 package com.aabid.animedownloader.service.ytdlp;
 
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.aabid.animedownloader.net.DNSException;
-import com.aabid.animedownloader.net.NetworkException;
-import com.aabid.animedownloader.net.TimeoutException;
 
 class ExceptionTranslator {
 
     private static final Pattern HTTP_ERROR_PATTERN = Pattern.compile("HTTP Error ([0-9]{3}): (.*)");
 
-    static void translate(YtDlpInvocationException e) throws YtDlpInvocationException, NetworkException, HttpException {
+    static void translate(YtDlpInvocationException e)
+        throws YtDlpInvocationException, HttpException, UnknownHostException, SocketTimeoutException {
         String message = e.getErrorOutput();
         if (message.contains("Failed to resolve")) {
-            throw new DNSException("Unable to resolve host", e);
+            UnknownHostException exception = new UnknownHostException("Unable to resolve host");
+            exception.initCause(e);
+
+            throw exception;
         }
 
         if (message.contains("Read timed out")) {
-            throw new TimeoutException("Timeout", e);
+            SocketTimeoutException exception = new SocketTimeoutException("Timeout");
+            exception.initCause(e);
+
+            throw exception;
         }
 
         checkHttpErrorMessage(message, e);
