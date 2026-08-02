@@ -1,4 +1,13 @@
 
+## [0.5.1] - 2026-08-02
+
+### 🐛 Bug Fixes
+
+- Show actual IOException message
+- Fail early with user-friendly message if yt-dlp is not installed
+- Display user-friendly error messages for yt-dlp errors
+- Throw error for invalid variable names outside [A-Za-z_]
+
 ## [0.5.0] - 2026-07-26
 
 ### 🚀 Features
