@@ -33,6 +33,7 @@ import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.service.animedl.QualitySpec;
 import com.aabid.animedownloader.service.animedl.ServerSpec;
 import com.aabid.animedownloader.service.animedl.SpecBasedStreamSelector;
+import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.Command;
@@ -77,7 +78,7 @@ public class DownloadSubcommand extends BaseSubcommand {
     @NonNull
     private QualitySpec qualitySpec;
 
-    @Option(names = { "-S", "--simulate" }, description = "Do not download the video")
+    @Option(names = {"-S", "--simulate"}, description = "Do not download the video")
     private boolean simulate;
 
     @Option(
@@ -101,6 +102,13 @@ public class DownloadSubcommand extends BaseSubcommand {
 
     @Override
     protected int start(@NonNull ProgramServices services) throws Exception {
+        YtDlp ytDlp = services.getYtDlpService();
+        if (!ytDlp.isInstalled()) {
+            printError("yt-dlp is not installed or not found in PATH. Please install yt-dlp to use this feature.");
+            printError("Visit https://github.com/yt-dlp/yt-dlp for installation instructions.");
+            return 1;
+        }
+
         DownloadService service = new DownloadService(services);
         try {
             DownloadRequest request = new DownloadRequest.Builder()

@@ -46,6 +46,33 @@ public class YtDlp {
         this.invoker = invoker;
     }
 
+    public boolean isInstalled() {
+        log.debug("Check if yt-dlp is installed");
+
+        try {
+            Program program = invoker.invoke(
+                new AccumulateStreamConsumer(),
+                new AccumulateStreamConsumer(),
+                "--version"
+            );
+
+            int exitCode = program.getExitCode();
+            log.debug("yt-dlp exit code: {}", exitCode);
+
+            if (exitCode != 0) {
+                log.warn("yt-dlp expected 0 exit. got: {}", exitCode);
+            }
+
+            return exitCode == 0;
+        } catch (IOException e) {
+            log.debug("IOException occurs while invoking yt-dlp", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Thread was interrupted while waiting yt-dlp to exit");
+        }
+        return false;
+    }
+
     public void download(DownloadConfiguration configuration, String link, Path out, @Nullable ProgressListener listener)
             throws IOException, YtDlpInvocationException, InterruptedException, HttpException {
         Objects.requireNonNull(configuration, "configuration must not be null");
