@@ -85,6 +85,35 @@ class NewFormatterTest {
             assertTrue(ex.getMessage().contains("Unknown specifier: unknown"));
         }
 
+        @Test
+        @DisplayName("Error: variable name with invalid characters (non A-Za-z_)")
+        void errorVariableNameInvalidCharacters() {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new NewFormatter("Hello {name-1}")
+            );
+            assertTrue(ex.getMessage().contains("Variable name must contain only letters and underscores"));
+        }
+
+        @Test
+        @DisplayName("Error: variable name starting with number")
+        void errorVariableNameStartingWithNumber() {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new NewFormatter("Hello {1name}")
+            );
+            assertTrue(ex.getMessage().contains("Variable name must contain only letters and underscores"));
+        }
+
+        @Test
+        @DisplayName("Error: variable name with special characters")
+        void errorVariableNameSpecialCharacters() {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> new NewFormatter("Hello {name@}")
+            );
+            assertTrue(ex.getMessage().contains("Variable name must contain only letters and underscores"));
+        }
     }
 
     @Nested
