@@ -76,7 +76,7 @@ public class DownloadSubcommand extends BaseSubcommand {
         converter = QualitySpecConverter.class
     )
     @NonNull
-    private QualitySpec qualitySpec;
+    private List<@NonNull QualitySpec> qualitySpecs = new ArrayList<>();
 
     @Option(names = {"-S", "--simulate"}, description = "Do not download the video")
     private boolean simulate;
@@ -95,7 +95,6 @@ public class DownloadSubcommand extends BaseSubcommand {
     @Parameters(index = "1", description = "Episode number")
     private int episodeId;
 
-    @SuppressWarnings("null")
     public DownloadSubcommand(@NonNull ProgramServicesFactory factory) {
         super(factory);
     }
@@ -114,7 +113,7 @@ public class DownloadSubcommand extends BaseSubcommand {
             DownloadRequest request = new DownloadRequest.Builder()
                 .setEpisodeId(episodeId)
                 .setAnimeId(animeId)
-                .setStreamSelector(new SpecBasedStreamSelector(serverSpecs, qualitySpec))
+                .setStreamSelector(new SpecBasedStreamSelector(serverSpecs, qualitySpecs))
                 .setFormatter(formatter)
                 .setSimulate(simulate)
                 .setOverwrite(overwrite)

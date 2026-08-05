@@ -28,6 +28,9 @@ public class QualitySpec {
     @NonNull
     public static final QualitySpec BEST = new QualitySpec("best");
 
+    @NonNull
+    public static final QualitySpec NONE = new QualitySpec("none");
+
     private final @NonNull String name;
 
     public QualitySpec(@NonNull String name) {
