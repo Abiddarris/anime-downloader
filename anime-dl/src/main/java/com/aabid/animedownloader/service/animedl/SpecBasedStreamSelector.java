@@ -2,7 +2,9 @@ package com.aabid.animedownloader.service.animedl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -26,31 +28,30 @@ public class SpecBasedStreamSelector implements StreamSelector {
     private static final Logger log = LoggerFactory.getLogger(SpecBasedStreamSelector.class);
 
     private @NonNull List<@NonNull ServerSpec> serverSpecs;
-    private @NonNull QualitySpec qualitySpec;
+    private @NonNull List<@NonNull QualitySpec> qualitySpecs;
 
-    public SpecBasedStreamSelector(@NonNull List<@NonNull ServerSpec> serverSpecs, @NonNull QualitySpec qualitySpec) {
+    public SpecBasedStreamSelector(@NonNull List<@NonNull ServerSpec> serverSpecs,
+                                   @NonNull List<@NonNull QualitySpec> qualitySpecs) {
         Objects.requireNonNull(serverSpecs, "specs can not be null");
+        Objects.requireNonNull(qualitySpecs, "specs can not be null");
 
-        this.qualitySpec = qualitySpec;
-        this.serverSpecs = getServerSpecs(serverSpecs);
+        this.qualitySpecs = validateQualitySpecs(qualitySpecs);
+        this.serverSpecs = validateServerSpecs(serverSpecs);
 
     }
 
     @NonNull
-    private List<@NonNull ServerSpec> getServerSpecs(List<@NonNull ServerSpec> specs) {
+    private List<@NonNull ServerSpec> validateServerSpecs(@NonNull List<@NonNull ServerSpec> specs) {
         List<@NonNull ServerSpec> serverSpecs = new ArrayList<>(specs);
         if (serverSpecs.isEmpty()) {
             serverSpecs.add(ServerSpec.ANY);
             return serverSpecs;
         }
 
-        int lastIndex = serverSpecs.size() - 1;
-        if ((serverSpecs.indexOf(ServerSpec.ANY) > 0 && serverSpecs.indexOf(ServerSpec.ANY) != lastIndex) ||
-                (serverSpecs.indexOf(ServerSpec.NONE) > 0 && serverSpecs.indexOf(ServerSpec.NONE) != lastIndex)) {
-            throw new IllegalArgumentException("ANY and NONE can only appear on the last element");
-        }
+        ensureOnTheLastElement(serverSpecs, ServerSpec.ANY);
+        ensureOnTheLastElement(serverSpecs, ServerSpec.NONE);
 
-        ServerSpec spec = serverSpecs.get(lastIndex);
+        ServerSpec spec = serverSpecs.get(serverSpecs.size() - 1);
         if (!spec.equals(ServerSpec.ANY) && !spec.equals(ServerSpec.NONE)) {
             serverSpecs.add(ServerSpec.NONE);
         }
@@ -58,64 +59,116 @@ public class SpecBasedStreamSelector implements StreamSelector {
         return serverSpecs;
     }
 
+    @NonNull
+    private List<@NonNull QualitySpec> validateQualitySpecs(List<@NonNull QualitySpec> specs) {
+        List<@NonNull QualitySpec> qualitySpecs = new ArrayList<>(specs);
+        if (qualitySpecs.isEmpty()) {
+            qualitySpecs.add(QualitySpec.ANY);
+            return qualitySpecs;
+        }
+
+        ensureOnTheLastElement(qualitySpecs, QualitySpec.ANY);
+        ensureOnTheLastElement(qualitySpecs, QualitySpec.BEST);
+        ensureOnTheLastElement(qualitySpecs, QualitySpec.WORST);
+        ensureOnTheLastElement(qualitySpecs, QualitySpec.NONE);
+
+
+        QualitySpec spec = qualitySpecs.get(qualitySpecs.size() - 1);
+        if (!(spec.equals(QualitySpec.ANY) || spec.equals(QualitySpec.NONE) ||
+              spec.equals(QualitySpec.BEST) || spec.equals(QualitySpec.WORST))) {
+            qualitySpecs.add(QualitySpec.NONE);
+        }
+
+        return qualitySpecs;
+    }
+
+    private static <T> void ensureOnTheLastElement(@NonNull List<T> collection, @Nullable T element) {
+        int lastIndex = collection.size() - 1;
+        if (collection.contains(element) && collection.indexOf(element) != lastIndex) {
+            throw new IllegalArgumentException(element + " can only appear on the last element");
+        }
+    }
+
     @Override
     public @Nullable Selection select(@NonNull Episode episode) throws IOException, AnimeServiceException {
-        List<@NonNull ServerInfo> allowedServers = resolveServers(episode);
-        if (qualitySpec.equals(QualitySpec.ANY)) {
-            return selectAnyQuality(episode, allowedServers);
+        List<@NonNull ServerInfo> candidateServers = getCandidateServers(episode);
+        Map<@NonNull ServerInfo, Server> servers = new HashMap<>();
+        for (QualitySpec qualitySpec : qualitySpecs) {
+            if (qualitySpec.equals(QualitySpec.NONE)) {
+                break;
+            }
+
+            if (qualitySpec.equals(QualitySpec.BEST) || qualitySpec.equals(QualitySpec.WORST)) {
+                return selectForBestOrWorst(episode, candidateServers, qualitySpec);
+            }
+
+            Selection selection = selectAnyOrSpecificQuality(
+                episode, candidateServers, servers, qualitySpec);
+            if (selection != null) {
+                return selection;
+            }
         }
 
-        if (qualitySpec.equals(QualitySpec.BEST) || qualitySpec.equals(QualitySpec.WORST)) {
-            return selectForBestOrWorst(episode, allowedServers);
-        }
-
-        return selectSpecificQuality(episode, allowedServers);
+        throw new DownloadException("No stream available for the selected quality");
     }
 
     @SuppressWarnings("null")
-    private static Selection selectAnyQuality(@NonNull Episode episode, @NonNull List<@NonNull ServerInfo> selectedServer)
-            throws IOException, AnimeServiceException {
-        for (ServerInfo serverInfo : selectedServer) {
-            try {
-                Server server = episode.fetchServer(serverInfo);
+    @Nullable
+    private Selection selectAnyOrSpecificQuality(
+            @NonNull Episode episode, @NonNull List<@NonNull ServerInfo> candidateServers,
+            @NonNull Map<@NonNull ServerInfo, Server> servers, @NonNull QualitySpec qualitySpec) {
+        for (ServerInfo serverInfo : candidateServers) {
+            Server server = fetchServer(episode, servers, serverInfo);
+            if (server == null) {
+                continue;
+            }
+
+            if (qualitySpec.equals(QualitySpec.ANY)) {
                 Optional<Quality> quality = server.getQualities()
                         .stream()
                         .findFirst();
 
-                if (quality.isPresent()) {
-                    return new Selection(serverInfo, quality.get());
+                if (!quality.isPresent()) {
+                    continue;
                 }
-            } catch (ServerException e) {
-                log.warn("Fail to fetch {} server", serverInfo.getId());
+
+                return new Selection(serverInfo, quality.get());
+            }
+
+            Optional<Quality> quality = server.getQuality(qualitySpec.getName());
+            if (quality.isPresent()) {
+                return new Selection(serverInfo, quality.get());
             }
         }
 
-        throw new DownloadException("No stream available for the selected quality");
+        return null;
     }
 
-    @SuppressWarnings("null")
-    private Selection selectSpecificQuality(@NonNull Episode episode, List<@NonNull ServerInfo> allowedServers)
-            throws IOException, AnimeServiceException {
-        for (ServerInfo serverInfo : allowedServers) {
+    @Nullable
+    private Server fetchServer(@NonNull Episode episode, Map<@NonNull ServerInfo, Server> servers,
+            @NonNull ServerInfo serverInfo) {
+        Server server = servers.computeIfAbsent(serverInfo, info -> {
             try {
-                Server server = episode.fetchServer(serverInfo);
-                Optional<Quality> quality = server.getQuality(qualitySpec.getName());
-
-                if (quality.isPresent()) {
-                    return new Selection(serverInfo, quality.get());
-                }
-            } catch (ServerException e) {
+                return episode.fetchServer(serverInfo);
+            } catch (IOException | AnimeServiceException e) {
                 log.warn("Fail to fetch {} server", serverInfo.getId());
             }
-        }
 
-        throw new DownloadException("No stream available for the selected quality");
+            return null;
+        });
+
+        // Important to prevent failed servers from being refetched.
+        if (server == null) {
+            servers.put(serverInfo, null);
+        }
+        return server;
     }
 
     private Selection selectForBestOrWorst(@NonNull Episode episode,
-            @NonNull List<@NonNull ServerInfo> allowedServers) throws IOException, AnimeServiceException {
+            @NonNull List<@NonNull ServerInfo> allowedServers, @NonNull QualitySpec qualitySpec) throws IOException, AnimeServiceException {
         ListMultimap<Integer, Selection> candidateSelection =
                 Multimaps.newListMultimap(new TreeMap<>(), ArrayList::new);
+
         for (ServerInfo serverInfo : allowedServers) {
             try {
                 Server server = episode.fetchServer(serverInfo);
@@ -135,11 +188,14 @@ public class SpecBasedStreamSelector implements StreamSelector {
         log.debug("candidates selection: {}", candidateSelection) ;
 
         List<Integer> resolutions = new ArrayList<>(candidateSelection.keySet());
+        int resolution;
         if (qualitySpec.equals(QualitySpec.BEST)) {
-            return candidateSelection.get(resolutions.get(resolutions.size() - 1)).get(0);
+            resolution = resolutions.get(resolutions.size() - 1);
+        } else {
+            resolution = resolutions.get(0);
         }
 
-        return candidateSelection.get(resolutions.get(0)).get(0);
+        return candidateSelection.get(resolution).get(0);
     }
 
     private static int getResolution(Quality quality) {
@@ -157,7 +213,7 @@ public class SpecBasedStreamSelector implements StreamSelector {
     }
 
     @NonNull
-    private List<@NonNull ServerInfo> resolveServers(@NonNull Episode episode) throws IOException, AnimeServiceException {
+    private List<@NonNull ServerInfo> getCandidateServers(@NonNull Episode episode) throws IOException, AnimeServiceException {
         List<ServerInfo> availableServers = new ArrayList<>(episode.getServers());
         List<@NonNull ServerInfo> candidateServers = new ArrayList<>();
         for (ServerSpec serverSpec : serverSpecs) {

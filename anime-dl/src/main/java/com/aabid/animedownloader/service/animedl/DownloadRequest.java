@@ -79,7 +79,7 @@ public class DownloadRequest {
 
         @SuppressWarnings("null")
         private @NonNull StreamSelector streamSelector =
-            new SpecBasedStreamSelector(List.of(ServerSpec.ANY), QualitySpec.ANY);
+            new SpecBasedStreamSelector(List.of(ServerSpec.ANY), List.of(QualitySpec.ANY));
 
         private NewFormatter formatter;
         private boolean simulate;
