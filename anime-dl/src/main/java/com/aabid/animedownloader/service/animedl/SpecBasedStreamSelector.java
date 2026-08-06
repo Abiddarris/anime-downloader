@@ -72,7 +72,6 @@ public class SpecBasedStreamSelector implements StreamSelector {
         ensureOnTheLastElement(qualitySpecs, QualitySpec.WORST);
         ensureOnTheLastElement(qualitySpecs, QualitySpec.NONE);
 
-
         QualitySpec spec = qualitySpecs.get(qualitySpecs.size() - 1);
         if (!(spec.equals(QualitySpec.ANY) || spec.equals(QualitySpec.NONE) ||
               spec.equals(QualitySpec.BEST) || spec.equals(QualitySpec.WORST))) {
@@ -132,12 +131,12 @@ public class SpecBasedStreamSelector implements StreamSelector {
                     continue;
                 }
 
-                return new Selection(serverInfo, quality.get());
+                return new Selection(server, quality.get());
             }
 
             Optional<Quality> quality = server.getQuality(qualitySpec.getName());
             if (quality.isPresent()) {
-                return new Selection(serverInfo, quality.get());
+                return new Selection(server, quality.get());
             }
         }
 
@@ -174,7 +173,7 @@ public class SpecBasedStreamSelector implements StreamSelector {
                 Server server = episode.fetchServer(serverInfo);
                 for (Quality quality : server.getQualities()) {
                     int resolution = getResolution(quality);
-                    candidateSelection.put(resolution, new Selection(serverInfo, quality));
+                    candidateSelection.put(resolution, new Selection(server, quality));
                 }
             } catch (ServerException e) {
                 log.warn("Fail to fetch {} server", serverInfo.getId());

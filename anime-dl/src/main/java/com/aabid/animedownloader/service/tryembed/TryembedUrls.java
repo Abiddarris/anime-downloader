@@ -25,6 +25,8 @@ class TryembedUrls {
     private static final String SCHEME = "https";
     private static final String HOST = "tryembed.us.cc";
 
+    @NonNull
+    @SuppressWarnings("null")
     static HttpUrl getEpisodeUrl(int animeId, int episode) {
         return new HttpUrl.Builder()
             .scheme(SCHEME)
@@ -37,6 +39,7 @@ class TryembedUrls {
     }
 
     @NonNull
+    @SuppressWarnings("null")
     static HttpUrl getTokenResolutionUrl(String token) {
         return new HttpUrl.Builder()
                 .scheme(SCHEME)
@@ -46,6 +49,7 @@ class TryembedUrls {
                 .build();
     }
 
+    @SuppressWarnings("null")
     @NonNull
     static HttpUrl getEpisodeApiUrl(int animeId, int episodeNumber, @Nullable String server, @NonNull String nonce) {
         HttpUrl.Builder builder = new HttpUrl.Builder()
@@ -64,6 +68,19 @@ class TryembedUrls {
         builder.addQueryParameter("nonce", nonce);
 
         return builder.build();
+    }
+
+    @SuppressWarnings("null")
+    @NonNull
+    static HttpUrl getSubtitleUrl(@NonNull String url) {
+        if (url.startsWith("/")) {
+            url = url.substring(1);
+        }
+        return new HttpUrl.Builder()
+                .scheme(SCHEME)
+                .host(HOST)
+                .addPathSegments(url)
+                .build();
     }
 
 }

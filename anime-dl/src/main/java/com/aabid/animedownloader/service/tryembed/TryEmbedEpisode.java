@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.anime.AnimeServiceException;
+import com.aabid.animedownloader.anime.Caption;
 import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
@@ -181,6 +182,30 @@ class TryEmbedEpisode extends Episode {
             log.debug("Resolved direct mirror stream link: {}", realLink);
 
             return realLink;
+        });
+    }
+
+    @Override
+    public byte[] downloadCaption(Caption caption) throws IOException, AnimeServiceException {
+        Request request = new Request.Builder()
+                .url(TryembedUrls.getSubtitleUrl(caption.getUrl()))
+                .header("User-Agent", userAgentProvider.getUserAgent())
+                .header("Accept", "*/*")
+                .header("Accept-Language", "en-US,en;q=0.9")
+                .header("Referer", source)
+                .header("Sec-Fetch-Dest", "empty")
+                .header("Sec-Fetch-Mode", "cors")
+                .header("Sec-Fetch-Site", "same-origin")
+                .header("TE", "trailers")
+                .build();
+
+        return executeRequest(request, response -> {
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new AnimeServiceException("response body is null.");
+            }
+
+            return body.bytes();
         });
 
     }

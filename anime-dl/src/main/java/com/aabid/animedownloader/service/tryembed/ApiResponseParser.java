@@ -22,6 +22,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
+import com.aabid.animedownloader.anime.Caption;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
@@ -70,8 +71,22 @@ class ApiResponseParser {
             case IDLE -> {
                 throw new ServerException("Server '" + server.getId() + "' is not ready (Unexpected IDLE status)");
             }
-            case READY -> new Server(server, createQualities(provider.qualities));
+            case READY -> new Server(server, createQualities(provider.qualities), createCaptions(provider.captions));
         };
+    }
+
+    @NonNull
+    private static List<@NonNull Caption> createCaptions(@NonNull List<ApiResponse.Caption> captions) {
+        return captions.stream()
+                .map(ApiResponseParser::createCaption)
+                .toList();
+    }
+
+    @NonNull
+    private static Caption createCaption(ApiResponse.Caption caption) {
+        return new Caption(
+            caption.label, caption.lang, caption.url, caption.format
+        );
     }
 
     @NonNull
