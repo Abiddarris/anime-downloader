@@ -35,6 +35,7 @@ class ApiResponse {
         public String name;
         public String type;
         public Status status;
+        public List<Caption> captions;
         public List<StreamQuality> qualities;
     }
 
@@ -60,6 +61,13 @@ class ApiResponse {
     static class Mark {
         public int start;
         public int end;
+    }
+
+    static class Caption {
+        public String label;
+        public String lang;
+        public String url;
+        public String format;
     }
 
     static enum Status {

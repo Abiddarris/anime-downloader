@@ -19,6 +19,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +44,8 @@ class ProgressParserStreamConsumer implements StreamConsumer {
 
     private @NonNull final ProgressListener listener;
 
+    private @Nullable String finalPath;
+
     public ProgressParserStreamConsumer(@NonNull ProgressListener listener) {
         this.listener = listener;
     }
@@ -55,6 +60,9 @@ class ProgressParserStreamConsumer implements StreamConsumer {
 
             Matcher matcher = PROGRESS_PATTERN.matcher(data);
             if (!matcher.find()) {
+                if (data.startsWith("/")) {
+                    finalPath = data;
+                }
                 continue;
             }
 
@@ -93,6 +101,19 @@ class ProgressParserStreamConsumer implements StreamConsumer {
 
         Double valueDouble = Double.parseDouble(value);
         return Math.round(valueDouble);
+    }
+
+    @Nullable
+    Path getFinalPath() {
+        if (finalPath == null) {
+            return null;
+        }
+        Path path = Paths.get(finalPath);
+        if (!Files.exists(path)) {
+            throw new IllegalStateException("final file is missing.");
+        }
+
+        return path;
     }
 
 }

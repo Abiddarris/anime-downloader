@@ -38,6 +38,8 @@ public abstract class Episode {
     @NonNull
     public abstract String resolveQuality(Quality quality) throws IOException, AnimeServiceException;
 
+    public abstract byte[] downloadCaption(Caption caption) throws IOException, AnimeServiceException;
+
     public final Optional<ServerInfo> findServerById(String id) {
         return getServers().stream()
                 .filter(server -> server.getId().equals(id))

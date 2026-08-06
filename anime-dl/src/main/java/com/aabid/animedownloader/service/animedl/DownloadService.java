@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.anime.AnimeService;
 import com.aabid.animedownloader.anime.AnimeServiceException;
+import com.aabid.animedownloader.anime.Caption;
 import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
@@ -48,6 +49,7 @@ import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.io.Files;
 
 public class DownloadService {
 
@@ -104,14 +106,37 @@ public class DownloadService {
 
         out.println("Passing stream link to yt-dlp for download");
 
-        if (!request.isSimulate()) {
-            invokeYtDlp(request, link, Path.of(output));
+        if (request.isSimulate()) {
+            return;
         }
+
+        Path video = invokeYtDlp(request, link, Path.of(output));
+        downloadSubtitle(episode, selection.getServer(), video);
     }
 
+    private void downloadSubtitle(@NonNull Episode episode, @NonNull Server server, @NonNull Path video)
+            throws IOException, AnimeServiceException {
+        List<@NonNull Caption> captions = server.getCaptions();
+        if (captions.isEmpty()) {
+            log.debug("No subtitle available");
+            return;
+        }
 
+        out.println("Downloading subtitle...");
+        for (Caption caption : captions) {
+            String name = Files.getNameWithoutExtension(video.toString()) +
+                "." + caption.getId() + "." + caption.getFormat();
+            Path dest = video.resolveSibling(name);
 
-    private void invokeYtDlp(DownloadRequest request, String url, Path dest) throws IOException, YtDlpInvocationException,
+            byte[] data = episode.downloadCaption(caption);
+
+            log.debug("Writing {} subs to {}", caption.getName(), dest);
+            java.nio.file.Files.write(dest, data);
+        }
+
+    }
+
+    private Path invokeYtDlp(DownloadRequest request, String url, Path dest) throws IOException, YtDlpInvocationException,
              InterruptedException, HttpException {
         List<String> headers = new ArrayList<>();
         headers.add("User-Agent: " + userAgentProvider.getUserAgent());
@@ -134,7 +159,7 @@ public class DownloadService {
             .build();
 
         DownloadProgressPrinter printer = new DownloadProgressPrinter(out);
-        ytDlpService.download(configuration, url, dest, printer);
+        return ytDlpService.download(configuration, url, dest, printer);
     }
 
     private String getOutputName(@NonNull NewFormatter formatter, @NonNull EpisodeInfo episodeInfo,

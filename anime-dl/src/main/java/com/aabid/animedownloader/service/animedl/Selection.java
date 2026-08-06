@@ -18,29 +18,37 @@ package com.aabid.animedownloader.service.animedl;
 import org.jspecify.annotations.NonNull;
 
 import com.aabid.animedownloader.anime.Quality;
+import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
 
 class Selection {
 
-    private @NonNull final ServerInfo serverInfo;
+    private @NonNull final Server server;
     private @NonNull final Quality quality;
 
-    public Selection(@NonNull ServerInfo serverInfo, @NonNull Quality quality) {
-        this.serverInfo = serverInfo;
+    public Selection(@NonNull Server server, @NonNull Quality quality) {
+        this.server = server;
         this.quality = quality;
     }
 
+    @NonNull
     public ServerInfo getServerInfo() {
-        return serverInfo;
+        return server.getInfo();
     }
 
+    @NonNull
+    public Server getServer() {
+        return server;
+    }
+
+    @NonNull
     public Quality getQuality() {
         return quality;
     }
 
     @Override
     public String toString() {
-        return "Selection [serverInfo=" + serverInfo + ", quality=" + quality + "]";
+        return "Selection [serverInfo=" + server + ", quality=" + quality + "]";
     }
 
 }

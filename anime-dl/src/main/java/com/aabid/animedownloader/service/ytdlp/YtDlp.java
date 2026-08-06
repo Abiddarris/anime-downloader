@@ -29,7 +29,6 @@ import com.aabid.animedownloader.utils.program.AccumulateStreamConsumer;
 import com.aabid.animedownloader.utils.program.ArgumentBuilder;
 import com.aabid.animedownloader.utils.program.Program;
 import com.aabid.animedownloader.utils.program.ProgramInvoker;
-import com.aabid.animedownloader.utils.program.StreamConsumer;
 
 public class YtDlp {
 
@@ -73,7 +72,8 @@ public class YtDlp {
         return false;
     }
 
-    public void download(DownloadConfiguration configuration, String link, Path out, @Nullable ProgressListener listener)
+    @NonNull
+    public Path download(DownloadConfiguration configuration, String link, Path out, @Nullable ProgressListener listener)
             throws IOException, YtDlpInvocationException, InterruptedException, HttpException {
         Objects.requireNonNull(configuration, "configuration must not be null");
         Objects.requireNonNull(link, "link must not be null");
@@ -91,7 +91,7 @@ public class YtDlp {
         applyConfiguration(configuration, builder);
 
         Path workingDirectory = out.getParent();
-        StreamConsumer output = new ProgressParserStreamConsumer(listener);
+        ProgressParserStreamConsumer output = new ProgressParserStreamConsumer(listener);
         AccumulateStreamConsumer error = new AccumulateStreamConsumer();
 
         String[] args = builder.build();
@@ -109,6 +109,13 @@ public class YtDlp {
             YtDlpInvocationException e = new YtDlpInvocationException(exitCode, new String(error.getBytes()).trim());
             ExceptionTranslator.translate(e);
         }
+
+        Path finalPath = output.getFinalPath();
+        if (finalPath == null) {
+            throw new IllegalStateException("finalPath missing on successful download");
+        }
+
+        return finalPath;
     }
 
     private static void applyConfiguration(DownloadConfiguration configuration, ArgumentBuilder builder) {
@@ -118,7 +125,9 @@ public class YtDlp {
             .addOption("--fragment-retries",
                     retries == Retries.infinite() ? "infinite" : String.valueOf(retries.getRetries()))
             .addOption("--progress-template", PROGRESS_TEMPLATE)
-            .addBooleanOptions("--newline");
+            .addBooleanOptions("--newline")
+            .addOption("--print", "after_move:filepath")
+            .addBooleanOptions("--no-quiet");
 
         for (String header : configuration.getHeaders()) {
             builder.addOption("--add-headers", header);
