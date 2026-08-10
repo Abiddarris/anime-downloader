@@ -21,17 +21,16 @@ import java.util.Map;
 
 import org.jspecify.annotations.NonNull;
 
-import com.aabid.animedownloader.utils.format.Token.Type;
-
 public class NewFormatter {
 
     private final List<Statement> statements;
 
     public NewFormatter(@NonNull String format) {
-        this.statements = createStatements(tokenize(format));
+        this.statements = createStatements(Tokenizer.tokenize(format));
     }
 
-    private List<Statement> createStatements(List<Token> tokens) {
+    @SuppressWarnings("null")
+    private List<Statement> createStatements(List<@NonNull Token> tokens) {
         List<Statement> statements = new ArrayList<>();
         StringBuilder temp = new StringBuilder();
         boolean insideBracket = false;
@@ -76,47 +75,7 @@ public class NewFormatter {
         return statements;
     }
 
-    private List<Token> tokenize(String format) {
-        List<Token> tokens = new ArrayList<>();
-        for (int i = 0; i < format.length();) {
-            char c = format.charAt(i);
-            if (!(c == '{' || c == '}')) {
-                tokens.add(createLiteralToken(c));
-                i++;
-                continue;
-            }
-
-            if (i + 1 >= format.length()) {
-                tokens.add(createCurlyBracketToken(c));
-                i++;
-                continue;
-            }
-
-            char nextChar = format.charAt(i + 1);
-            if (nextChar == c) {
-                tokens.add(createLiteralToken(c));
-                i += 2;
-                continue;
-            }
-
-            tokens.add(createCurlyBracketToken(c));
-            i++;
-        }
-        return tokens;
-    }
-
-    private Token createLiteralToken(char c) {
-        return new Token(c, Type.LITERAL);
-    }
-
-    private Token createCurlyBracketToken(char c) {
-        if (c == '{') {
-            return new Token(c, Type.BRACKET_START);
-        }
-
-        return new Token(c, Type.BRACKET_END);
-    }
-
+    @SuppressWarnings("null")
     @NonNull
     public String format(Map<String, Object> values) {
         StringBuilder result = new StringBuilder();
