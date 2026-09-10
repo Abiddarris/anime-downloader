@@ -17,9 +17,13 @@ package com.aabid.animedownloader.service.tryembed;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.Caption;
@@ -32,6 +36,8 @@ import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.StreamQuality;
 
 class ApiResponseParser {
+
+    private static final Logger log = LoggerFactory.getLogger(ApiResponseParser.class);
 
     @NonNull
     static EpisodeInfo createEpisodeInfo(@NonNull ApiResponse response) throws AnimeNotFoundException {
@@ -93,19 +99,24 @@ class ApiResponseParser {
     private static List<Quality> createQualities(@NonNull List<StreamQuality> qualities) {
         return qualities.stream()
                 .map(ApiResponseParser::createQuality)
+                .filter(Predicate.not(Objects::isNull))
                 .toList();
     }
 
-    @NonNull
+    @Nullable
     private static Quality createQuality(@NonNull StreamQuality quality) {
         String name = getStandarizedName(quality);
+        if (name == null) {
+            return null;
+        }
+
         if (quality.token == null && quality.fallbackToken == null) {
             return new DirectQuality(name, quality.directUrl);
         }
         return new TokenBasedQuality(name, quality.token, quality.fallbackToken);
     }
 
-    @NonNull
+    @Nullable
     private static String getStandarizedName(@NonNull StreamQuality quality) {
         if (quality.name.equals("Default")) {
             return quality.name;
@@ -117,7 +128,9 @@ class ApiResponseParser {
 
         int end = quality.name.indexOf("p");
         if (end == -1) {
-            throw new IllegalStateException("Unknown resolution name");
+            log.warn("Unsupported quality of {}, skipping it", quality.name) ;
+            return null;
+
         }
 
         return quality.name.substring(0, end + 1);
