@@ -1,4 +1,16 @@
 
+## [0.6.0] - 2026-09-10
+
+### 🚀 Features
+
+- Add multiple quality support with fallback and none keyword to download command
+- Add automatic caption download with VIDEO_NAME.LANGUAGE_ID.FORMAT naming
+
+### 🐛 Bug Fixes
+
+- Ignore unsupported resolutions instead of throwing an exception
+- Disable anilist api call temporarily
+
 ## [0.5.1] - 2026-08-02
 
 ### 🐛 Bug Fixes
