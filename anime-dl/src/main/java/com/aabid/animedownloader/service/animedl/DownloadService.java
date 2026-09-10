@@ -98,7 +98,7 @@ public class DownloadService {
             request.getEpisodeId(), request.getAnimeId()
         );
 
-        AnimeMetadata metadata = anilistService.getMetadata(request.getAnimeId());
+        AnimeMetadata metadata = null; // anilistService.getMetadata(request.getAnimeId());
         String output = getOutputName(
             request.getFormatter(), episodeInfo,
             selection.getServerInfo(), quality, metadata
@@ -168,9 +168,9 @@ public class DownloadService {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("id", episodeInfo.getAnilistId());
         metadata.put("episode", episodeInfo.getEpisode());
-        metadata.put("anime_title", animeMetadata.getRomajiTitle());
-        metadata.put("english_anime_title", animeMetadata.getEnglishTitle());
-        metadata.put("native_anime_title", animeMetadata.getNativeTitle());
+        metadata.put("anime_title", episodeInfo.getAnimeTitle() /**animeMetadata.getRomajiTitle()*/);
+        // metadata.put("english_anime_title", animeMetadata.getEnglishTitle());
+        // metadata.put("native_anime_title", animeMetadata.getNativeTitle());
         metadata.put("tryembed_anime_title", episodeInfo.getAnimeTitle());
         metadata.put("ext", "%(ext)s");
         metadata.put("server_name", serverInfo.getName());
