@@ -6,7 +6,9 @@ A lightweight command-line tool to search, inspect, and download anime episodes 
 
 - **Anime search** — find AniList IDs by name or keyword, no need to look them up manually
 - **Episode inspection** — check available servers and qualities before downloading
-- **Quality selection** — specify target resolution or let it pick the best/worst/any available
+- **Quality selection** — specify one or more target resolutions as a repeatable fallback chain, or let it pick the best/worst/any available
+- **Complex quality fallback** — repeat `-Q/--quality` to try `1080p -> 720p -> 360p` in order.
+- **Closed-caption sidecar download** — when a source exposes a caption/CC stream beside the HLS video, download it as a separate file
 - **Server selection** — target specific streaming servers by ID with fallback control
 - **AniList integration** — identify anime using standard AniList IDs
 - **Custom progress output** — shows download progress without relying on yt-dlp output
@@ -107,8 +109,8 @@ Fetch and display available servers and qualities for an episode
 Download an episode to local storage.
 
 ```
-Usage: anime-downloader download [-hSvV] [--[no-]overwrite] [--connect-timeout=mills] [-o=output] [-Q=quality]
-                                 [--read-timeout=mills] [--write-timeout=mills] [-s=serverId]... <animeId> <episodeId>
+Usage: anime-downloader download [-hSvV] [--[no-]overwrite] [--connect-timeout=mills] [-o=output] [--read-timeout=mills]
+                                 [--write-timeout=mills] [-Q=quality]... [-s=serverId]... <animeId> <episodeId>
 Download an anime episode from tryembed.us.cc
       <animeId>              AniList anime ID
       <episodeId>            Episode number
@@ -117,7 +119,8 @@ Download an anime episode from tryembed.us.cc
   -h, --help                 Show this help message and exit.
   -o, --output=output        Output file name (default: {anime_title} #{episode} [{id}].{ext})
       --[no-]overwrite       Overwrite existing files (default: --no-overwrite)
-  -Q, --quality=quality      Video resolution (e.g. any, worst, best, 1080p, 720p, 360p)
+  -Q, --quality=quality      Video resolution (e.g. any, worst, best, none, 1080p, 720p, 360p). Can be specified multiple
+                                  time for fallback (default: any)
       --read-timeout=mills   Read timeout in milliseconds. 0 for no timeout (default: 30000)
   -s, --server=serverId      Server to try, in fallback order (repeatable). 'any' (default) tries all available servers
   -S, --simulate             Do not download the video
@@ -125,6 +128,8 @@ Download an anime episode from tryembed.us.cc
   -V, --version              Print version information and exit.
       --write-timeout=mills  Write timeout in milliseconds. 0 for no timeout (default: 10000)
 ```
+
+Any supported caption/CC streams found on the resolved server are downloaded as a separate file beside the resulting video.
 
 #### Output filename formatting
 
@@ -215,12 +220,14 @@ No   Server Name   Server Id   Quality
 ./anime-dl download -Q 1080p 7791 8
 ```
 
-**Download with quality selection (any/best/worst):**
+**Download with quality selection (any/best/worst/none):**
 
 ```bash
 ./anime-dl download -Q any 7791 8      # Find first available stream
 ./anime-dl download -Q best 7791 8     # Find best quality stream
 ./anime-dl download -Q worst 7791 8    # Find worst quality stream
+./anime-dl download -Q 1080p -Q 360p 7791 8 # Try 1080p, then 360p, then stop before any quality fallback
+./anime-dl download -Q 1080p -Q 360p -Q any 7791 8 # Try 1080p, then 360p, then any quality
 ```
 
 **Server selection with fallback control:**
