@@ -1,4 +1,11 @@
 
+## [0.6.1] - 2026-09-13
+
+### 🐛 Bug Fixes
+
+- Add guard to continue downloading despite anilist api call failed
+- Better error message for invalid output formatting
+
 ## [0.6.0] - 2026-09-10
 
 ### 🚀 Features
