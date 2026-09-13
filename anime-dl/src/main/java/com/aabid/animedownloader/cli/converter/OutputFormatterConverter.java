@@ -18,13 +18,18 @@ package com.aabid.animedownloader.cli.converter;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
 import picocli.CommandLine.ITypeConverter;
+import picocli.CommandLine.TypeConversionException;
 
 public class OutputFormatterConverter implements ITypeConverter<NewFormatter> {
 
     @SuppressWarnings("null")
     @Override
     public NewFormatter convert(String value) throws Exception {
-        return new NewFormatter(value);
+        try {
+            return new NewFormatter(value);
+        } catch (IllegalArgumentException e) {
+            throw new TypeConversionException(e.getMessage());
+        }
     }
 
 }
