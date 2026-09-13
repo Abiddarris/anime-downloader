@@ -19,11 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
 
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
@@ -36,19 +32,12 @@ import com.aabid.animedownloader.anime.Episode;
 import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
-import com.aabid.animedownloader.anime.ServerException;
-import com.aabid.animedownloader.anime.ServerInfo;
 import com.aabid.animedownloader.net.UserAgentProvider;
-import com.aabid.animedownloader.service.anilist.AnilistService;
-import com.aabid.animedownloader.service.anilist.AnimeMetadata;
 import com.aabid.animedownloader.service.ytdlp.DownloadConfiguration;
 import com.aabid.animedownloader.service.ytdlp.HttpException;
 import com.aabid.animedownloader.service.ytdlp.Retries;
 import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.service.ytdlp.YtDlpInvocationException;
-import com.aabid.animedownloader.utils.format.NewFormatter;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.io.Files;
 
 public class DownloadService {
@@ -63,14 +52,11 @@ public class DownloadService {
 
     private @NonNull UserAgentProvider userAgentProvider;
 
-    private @NonNull AnilistService anilistService;
-
     public DownloadService(@NonNull ProgramServices services) {
         this.source = services.getSource();
         this.ytDlpService = services.getYtDlpService();
         this.out = services.getOut();
         this.userAgentProvider = services.getUserAgentProvider();
-        this.anilistService = services.getAnilistService();
     }
 
     public void download(DownloadRequest request) throws IOException, AnimeServiceException, YtDlpInvocationException,
@@ -98,11 +84,7 @@ public class DownloadService {
             request.getEpisodeId(), request.getAnimeId()
         );
 
-        AnimeMetadata metadata = null; // anilistService.getMetadata(request.getAnimeId());
-        String output = getOutputName(
-            request.getFormatter(), episodeInfo,
-            selection.getServerInfo(), quality, metadata
-        );
+        String output = request.getOutputNameGenerator().generate(episodeInfo, selection);
 
         out.println("Passing stream link to yt-dlp for download");
 
@@ -162,25 +144,5 @@ public class DownloadService {
         return ytDlpService.download(configuration, url, dest, printer);
     }
 
-    private String getOutputName(@NonNull NewFormatter formatter, @NonNull EpisodeInfo episodeInfo,
-                                 @NonNull ServerInfo serverInfo, @NonNull Quality quality,
-                                @NonNull AnimeMetadata animeMetadata) {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("id", episodeInfo.getAnilistId());
-        metadata.put("episode", episodeInfo.getEpisode());
-        metadata.put("anime_title", episodeInfo.getAnimeTitle() /**animeMetadata.getRomajiTitle()*/);
-        // metadata.put("english_anime_title", animeMetadata.getEnglishTitle());
-        // metadata.put("native_anime_title", animeMetadata.getNativeTitle());
-        metadata.put("tryembed_anime_title", episodeInfo.getAnimeTitle());
-        metadata.put("ext", "%(ext)s");
-        metadata.put("server_name", serverInfo.getName());
-        metadata.put("server_id", serverInfo.getId());
-        metadata.put("quality", quality.getName());
-
-        String output = formatter.format(metadata);
-        log.debug("Output filename: {}", output);
-
-        return output;
-    }
 
 }

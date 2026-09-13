@@ -25,14 +25,17 @@ import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.cli.converter.OutputFormatterConverter;
 import com.aabid.animedownloader.cli.converter.QualitySpecConverter;
 import com.aabid.animedownloader.cli.converter.ServerSpecConverter;
+import com.aabid.animedownloader.service.animedl.AnilistValuesProvider;
 import com.aabid.animedownloader.service.animedl.DownloadException;
 import com.aabid.animedownloader.service.animedl.DownloadRequest;
 import com.aabid.animedownloader.service.animedl.DownloadService;
+import com.aabid.animedownloader.service.animedl.OutputNameGenerator;
 import com.aabid.animedownloader.service.animedl.ProgramServices;
 import com.aabid.animedownloader.service.animedl.ProgramServicesFactory;
 import com.aabid.animedownloader.service.animedl.QualitySpec;
 import com.aabid.animedownloader.service.animedl.ServerSpec;
 import com.aabid.animedownloader.service.animedl.SpecBasedStreamSelector;
+import com.aabid.animedownloader.service.animedl.UserDefineNameGenerator;
 import com.aabid.animedownloader.service.ytdlp.YtDlp;
 import com.aabid.animedownloader.utils.format.NewFormatter;
 
@@ -111,11 +114,13 @@ public class DownloadSubcommand extends BaseSubcommand {
 
         DownloadService service = new DownloadService(services);
         try {
+            AnilistValuesProvider valuesProvider = new AnilistValuesProvider(services.getAnilistService());
+            OutputNameGenerator outputNameGenerator = new UserDefineNameGenerator(formatter, valuesProvider);
             DownloadRequest request = new DownloadRequest.Builder()
                 .setEpisodeId(episodeId)
                 .setAnimeId(animeId)
                 .setStreamSelector(new SpecBasedStreamSelector(serverSpecs, qualitySpecs))
-                .setFormatter(formatter)
+                .setOutputNameGenerator(outputNameGenerator)
                 .setSimulate(simulate)
                 .setOverwrite(overwrite)
                 .build();

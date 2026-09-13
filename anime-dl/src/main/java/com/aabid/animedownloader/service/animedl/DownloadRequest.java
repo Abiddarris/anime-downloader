@@ -31,7 +31,7 @@ public class DownloadRequest {
     private final int episodeId;
     private final int animeId;
     private final @NonNull StreamSelector streamSelector;
-    private final NewFormatter formatter;
+    private final @NonNull OutputNameGenerator outputNameGenerator;
     private final boolean simulate;
     private final boolean overwrite;
 
@@ -39,7 +39,7 @@ public class DownloadRequest {
         this.episodeId = builder.episodeId;
         this.animeId = builder.animeId;
         this.streamSelector = builder.streamSelector;
-        this.formatter = builder.formatter;
+        this.outputNameGenerator = builder.outputNameGenerator;
         this.simulate = builder.simulate;
         this.overwrite = builder.overwrite;
     }
@@ -57,8 +57,9 @@ public class DownloadRequest {
         return animeId;
     }
 
-    public NewFormatter getFormatter() {
-        return formatter;
+    @NonNull
+    public OutputNameGenerator getOutputNameGenerator() {
+        return outputNameGenerator;
     }
 
     public boolean isSimulate() {
@@ -81,7 +82,11 @@ public class DownloadRequest {
         private @NonNull StreamSelector streamSelector =
             new SpecBasedStreamSelector(List.of(ServerSpec.ANY), List.of(QualitySpec.ANY));
 
-        private NewFormatter formatter;
+        private @NonNull OutputNameGenerator outputNameGenerator = new UserDefineNameGenerator(
+            new NewFormatter("{anime_title} #{episode} [{id}].{ext}"),
+            new DefaultValuesProvider()
+        );
+
         private boolean simulate;
         private boolean overwrite = true;
 
@@ -102,8 +107,9 @@ public class DownloadRequest {
             return this;
         }
 
-        public Builder setFormatter(NewFormatter formatter) {
-            this.formatter = formatter;
+        public Builder setOutputNameGenerator(@NonNull OutputNameGenerator outputNameGenerator) {
+            Objects.requireNonNull(outputNameGenerator, "generator can not be null");
+            this.outputNameGenerator = outputNameGenerator;
             return this;
         }
 
