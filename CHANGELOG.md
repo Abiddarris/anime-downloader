@@ -1,4 +1,10 @@
 
+## [0.6.2] - 2026-09-26
+
+### 🐛 Bug Fixes
+
+- Access Denied: Player bootstrap is incomplete.
+
 ## [0.6.1] - 2026-09-13
 
 ### 🐛 Bug Fixes
