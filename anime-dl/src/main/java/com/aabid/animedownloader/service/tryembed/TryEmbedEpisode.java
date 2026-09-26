@@ -38,6 +38,7 @@ import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import tools.jackson.core.JacksonException;
@@ -84,31 +85,72 @@ class TryEmbedEpisode extends Episode {
         this.animeId = animeId;
         this.episode = episode;
         this.source = TryembedUrls.getEpisodeUrl(animeId, episode).toString();
-        this.nonceManager = new NonceManager(fetchCookiesAndRootNonce());
+        this.nonceManager = new NonceManager();
 
-        ApiResponse response = fetchEpisodeData(null);
+        String bootstrapTicket = fetchCookiesAndBootstrapTicket();
+        ApiResponse response = bootstrap(bootstrapTicket);
+
         this.info = ApiResponseParser.createEpisodeInfo(response);
         this.servers = ApiResponseParser.createServers(response.providers);
         this.readyServer = ApiResponseParser.getReadyServer(this.servers, response);
 	}
 
-    private String fetchCookiesAndRootNonce() throws IOException, AnimeServiceException {
+    private String fetchCookiesAndBootstrapTicket() throws IOException, AnimeServiceException {
         Request request = new Request.Builder()
                 .url(source)
                 .addHeader("User-Agent", userAgentProvider.getUserAgent())
                 .build();
 
-        log.debug("Fetching cookies and root nonce from: {}", source);
+        log.debug("Fetching cookies and bootstrap ticket from: {}", source);
 
         return executeRequest(request, response -> {
             String page = response.body().string();
-            int nonceStatementIndex = page.indexOf("window.EMBED_NONCE=\"");
-            int nonceIndex = nonceStatementIndex + "window.EMBED_NONCE=\"".length();
+            int bootstrapTicketIndex = page.indexOf("window.BOOTSTRAP_TICKET=\"");
+            int ticketIndex = bootstrapTicketIndex + "window.BOOTSTRAP_TICKET=\"".length();
 
-            String nonce = page.substring(nonceIndex, page.indexOf('"', nonceIndex));
+            String bootstrapTicket = page.substring(ticketIndex, page.indexOf('"', ticketIndex));
 
-            log.debug("Successfully updated cookies and root nonce.");
-            return nonce;
+            log.debug("Successfully updated cookies and bootstrap ticket.");
+            return bootstrapTicket;
+        });
+    }
+
+    @NonNull
+    private ApiResponse bootstrap(@NonNull String ticket) throws IOException, AnimeServiceException {
+        log.debug("Initializing bootstrap process with ticket: {}", ticket);
+
+        Request request = new Request.Builder()
+                .post(RequestBody.create(new byte[0]))
+                .url(TryembedUrls.getBootstrapUrl())
+                .addHeader("User-Agent", userAgentProvider.getUserAgent())
+                .addHeader("X-TryEmbed-Bootstrap", ticket)
+                .addHeader("Referer", source)
+                .addHeader("Sec-Fetch-Dest", "empty")
+                .addHeader("Sec-Fetch-Mode", "cors")
+                .build();
+
+        log.debug("Executing API request to: {}", request.url());
+
+        return executeRequest(request, response -> {
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new AnimeServiceException("HTTP response body is null");
+            }
+
+            String bootstrapResponseStr = body.string();
+            log.debug("Received raw JSON response from bootstrap: {}", bootstrapResponseStr);
+
+            try {
+                ApiResponse apiResponse = mapper.readValue(bootstrapResponseStr, ApiResponse.class);
+                if (apiResponse == null) {
+                    throw new AnimeServiceException("Failed to parse bootstrap response; deserialized object is null");
+                }
+                nonceManager.update(apiResponse.embedNonce);
+
+                return apiResponse;
+            } catch (JacksonException e) {
+                throw new AnimeServiceException("Failed to deserialize bootstrap response JSON", e);
+            }
         });
     }
 
@@ -131,6 +173,7 @@ class TryEmbedEpisode extends Episode {
                 .build();
 
         log.debug("Executing API request to: {}", request.url());
+
         return executeRequest(request, response -> {
             ResponseBody body = response.body();
             if (body == null) {

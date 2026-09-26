@@ -83,4 +83,14 @@ class TryembedUrls {
                 .build();
     }
 
+    @NonNull
+    public static HttpUrl getBootstrapUrl() {
+        return new HttpUrl.Builder()
+            .scheme(SCHEME)
+            .host(HOST)
+            .addPathSegment("api")
+            .addPathSegment("bootstrap")
+            .build();
+    }
+
 }
