@@ -23,10 +23,7 @@ class NonceManager {
     @Nullable
     private String nonce;
 
-    public NonceManager(@NonNull String initial) {
-        this.nonce = initial;
-    }
-
+    @NonNull
     public String acquire() {
         String nonce = this.nonce;
         if (nonce == null) {
