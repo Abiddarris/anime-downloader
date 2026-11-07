@@ -1,4 +1,10 @@
 
+## [0.6.3] - 2026-11-07
+
+### 🐛 Bug Fixes
+
+- Handle absolute URLs when downloading subtitles
+
 ## [0.6.2] - 2026-09-26
 
 ### 🐛 Bug Fixes
