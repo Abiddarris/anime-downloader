@@ -231,7 +231,7 @@ class TryEmbedEpisode extends Episode {
     @Override
     public byte[] downloadCaption(Caption caption) throws IOException, AnimeServiceException {
         Request request = new Request.Builder()
-                .url(TryembedUrls.getSubtitleUrl(caption.getUrl()))
+                .url(TryembedUrls.resolveURL(caption.getUrl()))
                 .header("User-Agent", userAgentProvider.getUserAgent())
                 .header("Accept", "*/*")
                 .header("Accept-Language", "en-US,en;q=0.9")

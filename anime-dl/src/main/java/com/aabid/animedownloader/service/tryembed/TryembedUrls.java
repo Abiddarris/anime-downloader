@@ -72,7 +72,11 @@ class TryembedUrls {
 
     @SuppressWarnings("null")
     @NonNull
-    static HttpUrl getSubtitleUrl(@NonNull String url) {
+    static HttpUrl resolveURL(@NonNull String url) {
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return HttpUrl.get(url);
+        }
+
         if (url.startsWith("/")) {
             url = url.substring(1);
         }
