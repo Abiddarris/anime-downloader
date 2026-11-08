@@ -16,9 +16,7 @@
 package com.aabid.animedownloader.anime;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.jspecify.annotations.NonNull;
 
@@ -28,15 +26,10 @@ public class Server {
     private final ServerInfo info;
 
     @NonNull
-    private final List<Quality> qualities;
-
-    @NonNull
     private final List<@NonNull Caption> captions;
 
-    public Server(@NonNull ServerInfo info, @NonNull List<Quality> qualities,
-            @NonNull List<@NonNull Caption> captions) {
+    public Server(@NonNull ServerInfo info, @NonNull List<@NonNull Caption> captions) {
         this.info = info;
-        this.qualities = qualities;
         this.captions = new ArrayList<>(captions);
     }
 
@@ -50,20 +43,14 @@ public class Server {
         return info;
     }
 
-    @SuppressWarnings("null")
-    @NonNull
-    public List<Quality> getQualities() {
-        return Collections.unmodifiableList(qualities);
-    }
+    // public Optional<Quality> getQuality(@NonNull String name) {
+    //     for (Quality quality : qualities) {
+    //         if (quality.getName().equals(name)) {
+    //             return Optional.of(quality);
+    //         }
+    //     }
 
-    public Optional<Quality> getQuality(@NonNull String name) {
-        for (Quality quality : qualities) {
-            if (quality.getName().equals(name)) {
-                return Optional.of(quality);
-            }
-        }
-
-        return Optional.empty();
-    }
+    //     return Optional.empty();
+    // }
 
 }

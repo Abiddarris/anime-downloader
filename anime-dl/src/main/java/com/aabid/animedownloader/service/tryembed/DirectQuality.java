@@ -17,9 +17,7 @@ package com.aabid.animedownloader.service.tryembed;
 
 import org.jspecify.annotations.NonNull;
 
-import com.aabid.animedownloader.anime.Quality;
-
-class DirectQuality extends Quality {
+class DirectQuality extends TryEmbedQuality {
 
     @NonNull
     private String link;

@@ -36,7 +36,7 @@ public abstract class Episode {
     public abstract Server fetchServer(ServerInfo info) throws IOException, AnimeServiceException;
 
     @NonNull
-    public abstract String resolveQuality(Quality quality) throws IOException, AnimeServiceException;
+    public abstract List<@NonNull Quality> resolveQualities(Server server) throws IOException, AnimeServiceException;
 
     public abstract byte[] downloadCaption(Caption caption) throws IOException, AnimeServiceException;
 

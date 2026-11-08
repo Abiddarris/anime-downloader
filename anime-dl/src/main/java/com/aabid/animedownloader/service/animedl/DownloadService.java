@@ -77,7 +77,7 @@ public class DownloadService {
         log.debug("Using quality: {}", quality);
         out.printf("Resolving stream link for '%s'%n", quality.getName());
 
-        String link = episode.resolveQuality(quality);
+        String link = quality.getLink();
 
         out.printf(
             "Fetching anime metadata for %d (AniList ID)%n",

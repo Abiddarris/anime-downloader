@@ -115,7 +115,7 @@ public class SpecBasedStreamSelector implements StreamSelector {
     @Nullable
     private Selection selectAnyOrSpecificQuality(
             @NonNull Episode episode, @NonNull List<@NonNull ServerInfo> candidateServers,
-            @NonNull Map<@NonNull ServerInfo, Server> servers, @NonNull QualitySpec qualitySpec) {
+            @NonNull Map<@NonNull ServerInfo, Server> servers, @NonNull QualitySpec qualitySpec) throws IOException, AnimeServiceException {
         for (ServerInfo serverInfo : candidateServers) {
             Server server = fetchServer(episode, servers, serverInfo);
             if (server == null) {
@@ -123,7 +123,7 @@ public class SpecBasedStreamSelector implements StreamSelector {
             }
 
             if (qualitySpec.equals(QualitySpec.ANY)) {
-                Optional<Quality> quality = server.getQualities()
+                Optional<Quality> quality = episode.resolveQualities(server)
                         .stream()
                         .findFirst();
 
@@ -134,13 +134,17 @@ public class SpecBasedStreamSelector implements StreamSelector {
                 return new Selection(server, quality.get());
             }
 
-            Optional<Quality> quality = server.getQuality(qualitySpec.getName());
+            Optional<Quality> quality = episode.resolveQualities(server)
+                    .stream()
+                    .filter(q -> q.getName().equals(qualitySpec.getName()))
+                    .findFirst();
+
             if (quality.isPresent()) {
                 return new Selection(server, quality.get());
             }
         }
 
-        return null;
+       return null;
     }
 
     @Nullable
@@ -171,7 +175,7 @@ public class SpecBasedStreamSelector implements StreamSelector {
         for (ServerInfo serverInfo : allowedServers) {
             try {
                 Server server = episode.fetchServer(serverInfo);
-                for (Quality quality : server.getQualities()) {
+                for (Quality quality : episode.resolveQualities(server)) {
                     int resolution = getResolution(quality);
                     candidateSelection.put(resolution, new Selection(server, quality));
                 }
