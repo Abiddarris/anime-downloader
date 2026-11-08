@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 import com.aabid.animedownloader.anime.AnimeNotFoundException;
 import com.aabid.animedownloader.anime.Caption;
 import com.aabid.animedownloader.anime.EpisodeInfo;
-import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerException;
 import com.aabid.animedownloader.anime.ServerInfo;
+import com.aabid.animedownloader.anime.StreamType;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.StreamQuality;
 
@@ -77,8 +77,25 @@ class ApiResponseParser {
             case IDLE -> {
                 throw new ServerException("Server '" + server.getId() + "' is not ready (Unexpected IDLE status)");
             }
-            case READY -> new Server(server, createQualities(provider.qualities), createCaptions(provider.captions));
+            case READY -> new TryEmbedServer(
+                server, createQualities(provider.qualities),
+                getStreamType(provider.type), createCaptions(provider.captions)
+            );
         };
+    }
+
+    private static @NonNull StreamType getStreamType(@Nullable String type) {
+        if (type == null) {
+            return StreamType.UNKNOWN;
+        }
+
+        if (type.equalsIgnoreCase("hls")) {
+            return StreamType.HLS;
+        } else if (type.equalsIgnoreCase("mp4")) {
+            return StreamType.MP4;
+        } else {
+            return StreamType.UNKNOWN;
+        }
     }
 
     @NonNull
@@ -96,7 +113,7 @@ class ApiResponseParser {
     }
 
     @NonNull
-    private static List<Quality> createQualities(@NonNull List<StreamQuality> qualities) {
+    private static List<TryEmbedQuality> createQualities(@NonNull List<StreamQuality> qualities) {
         return qualities.stream()
                 .map(ApiResponseParser::createQuality)
                 .filter(Predicate.not(Objects::isNull))
@@ -104,36 +121,11 @@ class ApiResponseParser {
     }
 
     @Nullable
-    private static Quality createQuality(@NonNull StreamQuality quality) {
-        String name = getStandarizedName(quality);
-        if (name == null) {
-            return null;
-        }
-
+    private static TryEmbedQuality createQuality(@NonNull StreamQuality quality) {
         if (quality.token == null && quality.fallbackToken == null) {
-            return new DirectQuality(name, quality.directUrl);
+            return new DirectQuality(quality.name, quality.directUrl);
         }
-        return new TokenBasedQuality(name, quality.token, quality.fallbackToken);
-    }
-
-    @Nullable
-    private static String getStandarizedName(@NonNull StreamQuality quality) {
-        if (quality.name.equals("Default")) {
-            return quality.name;
-        }
-
-        if (quality.name.endsWith("p")) {
-            return quality.name;
-        }
-
-        int end = quality.name.indexOf("p");
-        if (end == -1) {
-            log.warn("Unsupported quality of {}, skipping it", quality.name) ;
-            return null;
-
-        }
-
-        return quality.name.substring(0, end + 1);
+        return new TokenBasedQuality(quality.name, quality.token, quality.fallbackToken);
     }
 
     @Nullable

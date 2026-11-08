@@ -96,7 +96,7 @@ public class InfoSubcommand extends BaseSubcommand {
 
         for (Server server : servers) {
             ServerInfo serverInfo = server.getInfo();
-            for (Quality quality : server.getQualities()) {
+            for (Quality quality : episode.resolveQualities(server)) {
                 out.printf(formatting, ++no, serverInfo.getName(), serverInfo.getId(), quality.getName());
             }
         }

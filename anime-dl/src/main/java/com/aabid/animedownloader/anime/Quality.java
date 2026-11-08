@@ -17,13 +17,24 @@ package com.aabid.animedownloader.anime;
 
 import org.jspecify.annotations.NonNull;
 
-public abstract class Quality {
+public class Quality {
 
     @NonNull
-    private String name;
+    private final String name;
 
-    public Quality(@NonNull String name) {
+    @NonNull
+    private final StreamType type;
+
+    private final int resolution;
+
+    @NonNull
+    private final String link;
+
+    public Quality(@NonNull String name, @NonNull StreamType type, int resolution, @NonNull String link) {
         this.name = name;
+        this.type = type;
+        this.resolution = resolution;
+        this.link = link;
     }
 
     @NonNull
@@ -31,8 +42,20 @@ public abstract class Quality {
         return name;
     }
 
+    public int getResolution() {
+        return resolution;
+    }
+
     @Override
     public String toString() {
         return name;
+    }
+
+    public StreamType getType() {
+        return type;
+    }
+
+    public String getLink() {
+        return link;
     }
 }

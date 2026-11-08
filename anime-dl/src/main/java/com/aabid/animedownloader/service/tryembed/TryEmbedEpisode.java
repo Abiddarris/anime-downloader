@@ -16,6 +16,7 @@
 package com.aabid.animedownloader.service.tryembed;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,9 +34,14 @@ import com.aabid.animedownloader.anime.EpisodeInfo;
 import com.aabid.animedownloader.anime.Quality;
 import com.aabid.animedownloader.anime.Server;
 import com.aabid.animedownloader.anime.ServerInfo;
+import com.aabid.animedownloader.anime.StreamType;
 import com.aabid.animedownloader.net.UserAgentProvider;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 
+import io.lindstrom.m3u8.model.MultivariantPlaylist;
+import io.lindstrom.m3u8.model.Variant;
+import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
+import io.lindstrom.m3u8.parser.ParsingMode;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -198,8 +204,103 @@ class TryEmbedEpisode extends Episode {
     }
 
     @Override
+    public @NonNull List<@NonNull Quality> resolveQualities(Server server) throws IOException, AnimeServiceException {
+        if (!(server instanceof TryEmbedServer)) {
+            throw new IllegalArgumentException("Server must be an instance of TryEmbedServer");
+        }
+
+        List<@NonNull Quality> qualities = new ArrayList<>();
+        TryEmbedServer tryEmbedServer = (TryEmbedServer) server;
+
+        if (tryEmbedServer.getType() == StreamType.UNKNOWN) {
+            log.warn("Unsupported stream type for server {}", tryEmbedServer.getInfo().getName());
+            return qualities;
+        }
+
+        if (tryEmbedServer.getType() == StreamType.MP4) {
+            for (TryEmbedQuality quality : tryEmbedServer.getQualities()) {
+                try {
+                    String directLink = resolveDirectLink(quality);
+                    qualities.add(new Quality(
+                        quality.getName(), tryEmbedServer.getType(),
+                        parseResolutionFromName(quality.getName()), directLink
+                    ));
+                } catch (IOException | AnimeServiceException e) {
+                    log.error("Failed to resolve direct link for quality: {}", quality.getName(), e);
+                }
+            }
+            return qualities;
+        }
+
+        for (TryEmbedQuality quality : tryEmbedServer.getQualities()) {
+            try {
+                String directLink = resolveDirectLink(quality);
+                Request request = new Request.Builder()
+                    .url(directLink)
+                    .header("User-Agent", userAgentProvider.getUserAgent())
+                    .header("Accept", "*/*")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .header("Referer", source)
+                    .header("Sec-Fetch-Dest", "empty")
+                    .header("Sec-Fetch-Mode", "cors")
+                    .header("Sec-Fetch-Site", "same-origin")
+                    .header("TE", "trailers")
+                    .build();
+
+                String m3u8 = executeRequest(request, response -> {
+                    ResponseBody body = response.body();
+                    if (body == null) {
+                        throw new AnimeServiceException("response body is null.");
+                    }
+
+                    return body.string();
+                });
+
+                if (!isMasterPlaylist(m3u8)) {
+                    qualities.add(new Quality(
+                        quality.getName(), tryEmbedServer.getType(),
+                        parseResolutionFromName(quality.getName()), directLink
+                    ));
+                    continue;
+                }
+
+                MultivariantPlaylistParser masterParser = new MultivariantPlaylistParser(ParsingMode.LENIENT);
+                MultivariantPlaylist master = masterParser.readPlaylist(m3u8);
+
+                for (Variant variant : master.variants()) {
+                    qualities.add(new Quality(
+                        variant.resolution().get().height() + "p",
+                        tryEmbedServer.getType(),
+                        variant.resolution().get().height(), TryembedUrls.resolveURL(variant.uri()).toString()
+                    ));
+                }
+            } catch (IOException | AnimeServiceException e) {
+                log.debug("Failed to resolve direct link for quality: {}", quality.getName(), e);
+            }
+        }
+        return qualities;
+    }
+
+    private static boolean isMasterPlaylist(@NonNull String content) {
+        return content.contains("#EXT-X-STREAM-INF");
+    }
+
+    private static int parseResolutionFromName(@NonNull String name) {
+        if (name.endsWith("p")) {
+            name = name.substring(0, name.length() - 1);
+        }
+
+        try {
+            return Integer.parseInt(name);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse resolution from stream name {}", name);
+            return -1;
+        }
+    }
+
+
     @NonNull
-    public String resolveQuality(Quality quality) throws IOException, AnimeServiceException {
+    private String resolveDirectLink(@NonNull TryEmbedQuality quality) throws IOException, AnimeServiceException {
         log.info("Resolving direct target file path for quality: {}", quality.getName());
         if (quality instanceof DirectQuality directQuality) {
             return directQuality.getLink();
