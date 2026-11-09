@@ -1,4 +1,14 @@
 
+## [0.7.0] - 2026-11-09
+
+### 🚀 Features
+
+- Add support for splitting automatic resolution into multiple resolutions
+
+### 💼 Other
+
+- Ensure the output is printed after all error and warning messages in the info subcommand have been displayed.
+
 ## [0.6.3] - 2026-11-07
 
 ### 🐛 Bug Fixes
