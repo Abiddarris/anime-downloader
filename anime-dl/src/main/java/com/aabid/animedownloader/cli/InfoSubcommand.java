@@ -17,7 +17,9 @@ package com.aabid.animedownloader.cli;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.jspecify.annotations.NonNull;
@@ -89,19 +91,29 @@ public class InfoSubcommand extends BaseSubcommand {
                 .filter(Objects::nonNull)
                 .toList();
 
+        Map<ServerInfo, List<Quality>> qualities = fetchQualities(episode, servers);
+
         String formatting = "%-4s %-13s %-13s %-8s\n";
         out.printf(formatting, "No", "Server Name", "Server Id", "Quality");
         out.println("-".repeat(45));
         int no = 0;
 
-        for (Server server : servers) {
-            ServerInfo serverInfo = server.getInfo();
-            for (Quality quality : episode.resolveQualities(server)) {
+        for (ServerInfo serverInfo : qualities.keySet()) {
+            for (Quality quality : qualities.get(serverInfo)) {
                 out.printf(formatting, ++no, serverInfo.getName(), serverInfo.getId(), quality.getName());
             }
         }
 
         return 0;
+    }
+
+    private Map<ServerInfo,List<Quality>> fetchQualities(Episode episode, List<Server> servers) throws IOException, AnimeServiceException {
+        Map<ServerInfo, List<Quality>> serverQualities = new LinkedHashMap<>();
+        for (Server server : servers) {
+            ServerInfo serverInfo = server.getInfo();
+            serverQualities.put(serverInfo, episode.resolveQualities(server));
+        }
+        return serverQualities;
     }
 
     @Nullable
