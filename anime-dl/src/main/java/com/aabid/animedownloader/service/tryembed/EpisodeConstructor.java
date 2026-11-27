@@ -35,9 +35,9 @@ import com.aabid.animedownloader.anime.StreamType;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.Provider;
 import com.aabid.animedownloader.service.tryembed.ApiResponse.StreamQuality;
 
-class ApiResponseParser {
+class EpisodeConstructor {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiResponseParser.class);
+    private static final Logger log = LoggerFactory.getLogger(EpisodeConstructor.class);
 
     @NonNull
     static EpisodeInfo createEpisodeInfo(@NonNull ApiResponse response) throws AnimeNotFoundException {
@@ -58,7 +58,7 @@ class ApiResponseParser {
     @NonNull
     static List<ServerInfo> createServers(List<Provider> providers) {
         return providers.stream()
-            .map(ApiResponseParser::createServer)
+            .map(EpisodeConstructor::createServer)
             .toList();
     }
 
@@ -101,7 +101,7 @@ class ApiResponseParser {
     @NonNull
     private static List<@NonNull Caption> createCaptions(@NonNull List<ApiResponse.Caption> captions) {
         return captions.stream()
-                .map(ApiResponseParser::createCaption)
+                .map(EpisodeConstructor::createCaption)
                 .toList();
     }
 
@@ -115,7 +115,7 @@ class ApiResponseParser {
     @NonNull
     private static List<TryEmbedQuality> createQualities(@NonNull List<StreamQuality> qualities) {
         return qualities.stream()
-                .map(ApiResponseParser::createQuality)
+                .map(EpisodeConstructor::createQuality)
                 .filter(Predicate.not(Objects::isNull))
                 .toList();
     }

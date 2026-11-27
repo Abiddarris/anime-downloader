@@ -79,6 +79,9 @@ class TryEmbedEpisode extends Episode {
     @NonNull
     private NonceManager nonceManager;
 
+    @NonNull
+    private ApiResponseConstructor responseCreator;
+
     private int animeId;
     private int episode;
 
@@ -93,31 +96,38 @@ class TryEmbedEpisode extends Episode {
         this.source = TryembedUrls.getEpisodeUrl(animeId, episode).toString();
         this.nonceManager = new NonceManager();
 
-        String bootstrapTicket = fetchCookiesAndBootstrapTicket();
-        ApiResponse response = bootstrap(bootstrapTicket);
+        String[] preBootstrapVariables = doPrebootstrap();
+        this.responseCreator = new ApiResponseConstructor(preBootstrapVariables[1]);
 
-        this.info = ApiResponseParser.createEpisodeInfo(response);
-        this.servers = ApiResponseParser.createServers(response.providers);
-        this.readyServer = ApiResponseParser.getReadyServer(this.servers, response);
+        bootstrap(preBootstrapVariables[0]);
+
+        ApiResponse response = fetchEpisodeData("beta");
+
+        this.info = EpisodeConstructor.createEpisodeInfo(response);
+        this.servers = EpisodeConstructor.createServers(response.providers);
+        this.readyServer = EpisodeConstructor.getReadyServer(this.servers, response);
 	}
 
-    private String fetchCookiesAndBootstrapTicket() throws IOException, AnimeServiceException {
+    private String[] doPrebootstrap() throws IOException, AnimeServiceException {
         Request request = new Request.Builder()
                 .url(source)
                 .addHeader("User-Agent", userAgentProvider.getUserAgent())
                 .build();
 
-        log.debug("Fetching cookies and bootstrap ticket from: {}", source);
+        log.debug("Fetching cookies, te key, and bootstrap ticket from: {}", source);
 
         return executeRequest(request, response -> {
             String page = response.body().string();
             int bootstrapTicketIndex = page.indexOf("window.BOOTSTRAP_TICKET=\"");
             int ticketIndex = bootstrapTicketIndex + "window.BOOTSTRAP_TICKET=\"".length();
-
             String bootstrapTicket = page.substring(ticketIndex, page.indexOf('"', ticketIndex));
 
-            log.debug("Successfully updated cookies and bootstrap ticket.");
-            return bootstrapTicket;
+            int teKeyDefIndex = page.indexOf("window.__TE_KEY=\"");
+            int teKeyIndex = teKeyDefIndex + "window.__TE_KEY=\"".length();
+            String teKey = page.substring(teKeyIndex, page.indexOf('"', teKeyIndex));
+
+            log.debug("Successfully updated cookies,  te key, and bootstrap ticket.");
+            return new String[] {bootstrapTicket, teKey};
         });
     }
 
@@ -147,7 +157,7 @@ class TryEmbedEpisode extends Episode {
             log.debug("Received raw JSON response from bootstrap: {}", bootstrapResponseStr);
 
             try {
-                ApiResponse apiResponse = mapper.readValue(bootstrapResponseStr, ApiResponse.class);
+                ApiResponse apiResponse = responseCreator.constructResponse(bootstrapResponseStr);
                 if (apiResponse == null) {
                     throw new AnimeServiceException("Failed to parse bootstrap response; deserialized object is null");
                 }
@@ -190,7 +200,7 @@ class TryEmbedEpisode extends Episode {
             log.debug("Received raw JSON response from API: {}", apiResponseStr);
 
             try {
-                ApiResponse apiResponse = mapper.readValue(apiResponseStr, ApiResponse.class);
+                ApiResponse apiResponse = responseCreator.constructResponse(apiResponseStr);
                 if (apiResponse == null) {
                     throw new AnimeServiceException("Failed to parse API response; deserialized object is null");
                 }
@@ -427,6 +437,6 @@ class TryEmbedEpisode extends Episode {
                 .findFirst()
                 .get();
 
-        return ApiResponseParser.createServer(info, provider);
+        return EpisodeConstructor.createServer(info, provider);
     }
 }
